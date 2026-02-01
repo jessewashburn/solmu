@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { workService } from '../lib';
 import { Work } from '../types';
+import LoadingSpinner from '../components/ui/LoadingSpinner';
+import ErrorMessage from '../components/ui/ErrorMessage';
+import MetadataList from '../components/ui/MetadataList';
 import '../styles/shared/DetailPage.css';
 
 export default function WorkDetailPage() {
@@ -26,11 +29,18 @@ export default function WorkDetailPage() {
     }
   };
 
-  if (loading) return <div className="loading-state">Loading...</div>;
-  if (!work) return <div className="error-state">Work not found</div>;
+  if (loading) return <LoadingSpinner />;
+  if (!work) return <ErrorMessage title="Work Not Found" message="The requested work could not be found." />;
+
+  const metadataItems = [
+    work.catalog_number && { label: 'Catalog Number', value: work.catalog_number },
+    work.instrumentation_detail && { label: 'Instrumentation', value: work.instrumentation_detail },
+    work.duration_minutes && { label: 'Duration', value: `${work.duration_minutes} minutes` },
+    work.movements && { label: 'Movements', value: work.movements },
+  ].filter(Boolean) as Array<{ label: string; value: string | number }>;
 
   return (
-    <div className="detail-page">
+    <div className="page-container-narrow">
       <header className="detail-header">
         <h1>{work.title}</h1>
         <p className="detail-subtitle">
@@ -47,32 +57,7 @@ export default function WorkDetailPage() {
 
       <section className="detail-section">
         <h2>Details</h2>
-        <dl className="detail-list">
-          {work.catalog_number && (
-            <>
-              <dt>Catalog Number:</dt>
-              <dd>{work.catalog_number}</dd>
-            </>
-          )}
-          {work.instrumentation_detail && (
-            <>
-              <dt>Instrumentation:</dt>
-              <dd>{work.instrumentation_detail}</dd>
-            </>
-          )}
-          {work.duration_minutes && (
-            <>
-              <dt>Duration:</dt>
-              <dd>{work.duration_minutes} minutes</dd>
-            </>
-          )}
-          {work.movements && (
-            <>
-              <dt>Movements:</dt>
-              <dd>{work.movements}</dd>
-            </>
-          )}
-        </dl>
+        <MetadataList items={metadataItems} />
 
         {work.tags && work.tags.length > 0 && (
           <div className="detail-tags">

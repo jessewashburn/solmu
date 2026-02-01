@@ -1,0 +1,25 @@
+.metadata-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-sm);
+  margin: 0;
+  padding: 0;
+}
+
+.metadata-row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--spacing-lg);
+  line-height: 2;
+}
+
+.metadata-label {
+  font-weight: 600;
+  color: var(--color-header);
+  font-family: var(--font-primary);
+}
+
+.metadata-value {
+  color: var(--color-text-secondary);
+  margin: 0;
+}

@@ -1,0 +1,25 @@
+.error-message-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xl);
+  min-height: 300px;
+  text-align: center;
+}
+
+.error-icon {
+  font-size: 3rem;
+  margin-bottom: var(--spacing-md);
+}
+
+.error-title {
+  font-size: 1.5rem;
+  color: var(--color-header);
+  margin-bottom: var(--spacing-sm);
+}
+
+.error-text {
+  color: var(--color-text-secondary);
+  font-size: 1rem;
+}

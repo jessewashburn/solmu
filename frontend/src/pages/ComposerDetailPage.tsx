@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { composerService } from '../lib';
 import { Composer, Work } from '../types';
+import LoadingSpinner from '../components/ui/LoadingSpinner';
+import ErrorMessage from '../components/ui/ErrorMessage';
+import MetadataList from '../components/ui/MetadataList';
 import '../styles/shared/DetailPage.css';
 
 export default function ComposerDetailPage() {
@@ -31,36 +34,27 @@ export default function ComposerDetailPage() {
     }
   };
 
-  if (loading) return <div className="loading-state">Loading...</div>;
-  if (!composer) return <div className="error-state">Composer not found</div>;
+  if (loading) return <LoadingSpinner />;
+  if (!composer) return <ErrorMessage title="Composer Not Found" message="The requested composer could not be found." />;
 
   const birth = composer.birth_year || '?';
   const death = composer.death_year || (composer.is_living ? 'present' : '?');
 
+  const metadataItems = [
+    composer.country && { label: 'Country', value: composer.country.name },
+    composer.period && { label: 'Period', value: composer.period },
+    { label: 'Works', value: works.length },
+  ].filter(Boolean) as Array<{ label: string; value: string | number }>;
+
   return (
-    <div className="detail-page">
+    <div className="page-container-narrow">
       <header className="detail-header">
         <h1>{composer.full_name}</h1>
         <p className="detail-subtitle">
           {birth} - {death}
         </p>
         
-        <div className="detail-info-grid">
-          {composer.country && (
-            <>
-              <span className="detail-info-label">Country:</span>
-              <span className="detail-info-value">{composer.country.name}</span>
-            </>
-          )}
-          {composer.period && (
-            <>
-              <span className="detail-info-label">Period:</span>
-              <span className="detail-info-value">{composer.period}</span>
-            </>
-          )}
-          <span className="detail-info-label">Works:</span>
-          <span className="detail-info-value">{works.length}</span>
-        </div>
+        <MetadataList items={metadataItems} />
 
         {composer.biography && (
           <div className="detail-biography">

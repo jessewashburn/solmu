@@ -44,6 +44,35 @@
   
   --shadow-sm: 0 2px 4px rgba(0,0,0,0.1);
   --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+  
+  /* New shared properties */
+  --color-bg-secondary: #f9f9f9;
+}
+
+/* Common utility classes */
+.loading-state {
+  text-align: center;
+  padding: var(--spacing-xl);
+  color: var(--color-text-secondary);
+}
+
+.error-state {
+  text-align: center;
+  padding: var(--spacing-xl);
+  color: var(--color-error);
+}
+
+/* Common page wrapper */
+.page-container {
+  padding: var(--spacing-lg);
+  max-width: var(--max-width-wide);
+  margin: 0 auto;
+}
+
+.page-container-narrow {
+  padding: var(--spacing-lg);
+  max-width: var(--max-width-content);
+  margin: 0 auto;
 }
 
 * {
