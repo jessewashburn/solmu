@@ -184,7 +184,7 @@ export default function WorkListPage() {
   return (
     <div className="list-page">
       <header className="page-header">
-        <h1>Classical Guitar Music Database</h1>
+        <h1>Works</h1>
         <p>Browse {loading && totalCount === 0 ? '...' : totalCount.toLocaleString()} guitar works</p>
       </header>
 
