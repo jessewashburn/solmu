@@ -65,8 +65,8 @@ export default function HomePage() {
                   {highlightedWork.title}
                 </Link>
               </h3>
-              <p className="work-composer">
-                by{' '}
+              <div className="work-composer">
+                <span className="composer-by">by </span>
                 {highlightedWork.composer ? (
                   <Link to={`/composers/${highlightedWork.composer.id}`} className="composer-link">
                     {highlightedWork.composer.full_name}
@@ -74,51 +74,55 @@ export default function HomePage() {
                 ) : (
                   <span>Unknown Composer</span>
                 )}
-              </p>
+              </div>
               {composer && (
-                <div className="composer-info">
-                  <span className="composer-dates">
-                    {composer.birth_year && composer.death_year ? (
-                      `${composer.birth_year}–${composer.death_year}`
-                    ) : composer.birth_year && composer.is_living ? (
-                      `b. ${composer.birth_year}`
-                    ) : composer.birth_year ? (
-                      composer.birth_year
-                    ) : null}
-                  </span>
+                <div className="composer-metadata">
+                  {composer.birth_year && (
+                    <div className="composer-meta-item">
+                      <span className="meta-label">Born:</span>
+                      <span className="meta-value">
+                        {composer.death_year
+                          ? `${composer.birth_year}–${composer.death_year}`
+                          : composer.birth_year}
+                      </span>
+                    </div>
+                  )}
                   {composer.country && (
-                    <span className="composer-nationality">{composer.country.name}</span>
+                    <div className="composer-meta-item">
+                      <span className="meta-label">Country:</span>
+                      <span className="meta-value">{composer.country.name}</span>
+                    </div>
                   )}
                 </div>
               )}
             </div>
 
-            <dl className="work-details">
-              {highlightedWork.catalog_number && (
-                <>
-                  <dt>Catalog Number:</dt>
-                  <dd>{highlightedWork.catalog_number}</dd>
-                </>
-              )}
+            <div className="work-metadata">
               {highlightedWork.instrumentation_detail && (
-                <>
-                  <dt>Instrumentation:</dt>
-                  <dd>{highlightedWork.instrumentation_detail}</dd>
-                </>
+                <div className="metadata-item">
+                  <span className="metadata-label">Instrumentation</span>
+                  <span className="metadata-value">{highlightedWork.instrumentation_detail}</span>
+                </div>
+              )}
+              {highlightedWork.catalog_number && (
+                <div className="metadata-item">
+                  <span className="metadata-label">Catalog Number</span>
+                  <span className="metadata-value">{highlightedWork.catalog_number}</span>
+                </div>
               )}
               {highlightedWork.duration_minutes && (
-                <>
-                  <dt>Duration:</dt>
-                  <dd>{highlightedWork.duration_minutes} minutes</dd>
-                </>
+                <div className="metadata-item">
+                  <span className="metadata-label">Duration</span>
+                  <span className="metadata-value">{highlightedWork.duration_minutes} min</span>
+                </div>
               )}
               {highlightedWork.movements && (
-                <>
-                  <dt>Movements:</dt>
-                  <dd>{highlightedWork.movements}</dd>
-                </>
+                <div className="metadata-item">
+                  <span className="metadata-label">Movements</span>
+                  <span className="metadata-value">{highlightedWork.movements}</span>
+                </div>
               )}
-            </dl>
+            </div>
 
             {highlightedWork.tags && highlightedWork.tags.length > 0 && (
               <div className="work-tags">
