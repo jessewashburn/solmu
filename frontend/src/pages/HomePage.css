@@ -27,8 +27,17 @@
 .section-title {
   font-size: 2rem;
   color: var(--color-header);
-  margin-bottom: var(--spacing-lg);
+  margin-bottom: var(--spacing-sm);
   text-align: center;
+}
+
+.section-description {
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: 1rem;
+  line-height: 1.6;
+  max-width: 700px;
+  margin: 0 auto var(--spacing-lg);
 }
 
 /* Highlighted Work Section */

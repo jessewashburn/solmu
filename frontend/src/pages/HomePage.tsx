@@ -18,6 +18,8 @@ export default function HomePage() {
   const [highlightedWork, setHighlightedWork] = useState<Work | null>(null);
   const [composer, setComposer] = useState<Composer | null>(null);
   const [loading, setLoading] = useState(true);
+  const [totalComposers, setTotalComposers] = useState<number>(0);
+  const [totalWorks, setTotalWorks] = useState<number>(0);
 
   useEffect(() => {
     loadHighlightedWork();
@@ -26,12 +28,17 @@ export default function HomePage() {
   const loadHighlightedWork = async () => {
     setLoading(true);
     try {
-      // Get total count first
-      const response = await workService.getAll(1, '');
-      const totalWorks = response.count;
+      // Get total counts
+      const [worksResponse, composersResponse] = await Promise.all([
+        workService.getAll(1, ''),
+        composerService.getAll(1, '')
+      ]);
+      
+      setTotalWorks(worksResponse.count);
+      setTotalComposers(composersResponse.count);
       
       // Get today's work ID
-      const workId = getDailyWorkId(totalWorks);
+      const workId = getDailyWorkId(worksResponse.count);
       
       // Fetch the highlighted work
       const work = await workService.getById(workId);
@@ -53,6 +60,9 @@ export default function HomePage() {
     <div className="home-page">
       <section className="highlighted-work-section">
         <h2 className="section-title">Today's Highlighted Work</h2>
+        <p className="section-description">
+          Each day we highlight a randomly selected work from our collection.
+        </p>
         {loading ? (
           <div className="highlighted-work-card loading">
             <p>Loading today's work...</p>
@@ -144,6 +154,9 @@ export default function HomePage() {
 
       <section className="browse-section">
         <h2 className="section-title">Explore the Database</h2>
+        <p className="section-description">
+          Our comprehensive database features {totalComposers.toLocaleString()} composers and {totalWorks.toLocaleString()} works, spanning centuries of guitar music from around the world.
+        </p>
         <div className="browse-cards">
           <Link to="/composers" className="browse-card">
             <h3>Browse Composers</h3>
