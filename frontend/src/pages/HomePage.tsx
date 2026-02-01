@@ -142,11 +142,11 @@ export default function HomePage() {
         <h2 className="section-title">Explore the Database</h2>
         <div className="browse-cards">
           <Link to="/composers" className="browse-card">
-            <h3>Browse All Composers</h3>
+            <h3>Browse Composers</h3>
             <p>Explore our complete collection of classical guitar composers</p>
           </Link>
           <Link to="/works" className="browse-card">
-            <h3>Browse All Works</h3>
+            <h3>Browse Works</h3>
             <p>Discover thousands of guitar works from across history</p>
           </Link>
         </div>
