@@ -366,7 +366,7 @@ class ComposerViewSet(viewsets.ReadOnlyModelViewSet):
                 'Cambodia': ['Cambodian'],
                 'Laos': ['Laotian'],
                 'Afghanistan': ['Afghan'],
-                'Kazakhstan': ['Kazakh'],
+                'Kazakhstan': ['Kazakh', 'Kasachstan'],
                 'Uzbekistan': ['Uzbek'],
                 'Armenia': ['Armenian'],
                 'Georgia': ['Georgian'],
