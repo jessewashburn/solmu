@@ -9,9 +9,7 @@ export default function Navbar() {
 
   const isActive = (path: string) => {
     if (path === '/' && location.pathname === '/') return true;
-    if (path === '/composers' && location.pathname === '/') return true;
-    if (path === '/works' && location.pathname === '/works') return true;
-    if (path !== '/' && path !== '/works' && location.pathname.startsWith(path)) return true;
+    if (path !== '/' && location.pathname.startsWith(path)) return true;
     return false;
   };
 
@@ -40,6 +38,15 @@ export default function Navbar() {
           <li>
             <Link 
               to="/" 
+              className={`navbar-link ${location.pathname === '/' ? 'active' : ''}`}
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Home
+            </Link>
+          </li>
+          <li>
+            <Link 
+              to="/composers" 
               className={`navbar-link ${isActive('/composers') ? 'active' : ''}`}
               onClick={() => setMobileMenuOpen(false)}
             >
