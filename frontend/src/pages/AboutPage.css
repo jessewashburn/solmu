@@ -8,6 +8,7 @@
   font-size: 2.5rem;
   margin-bottom: 2rem;
   color: var(--color-header);
+  text-align: center;
 }
 
 .about-content {
