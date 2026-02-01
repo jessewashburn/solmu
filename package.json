@@ -1,0 +1,21 @@
+{
+  "name": "cgmd",
+  "version": "1.0.0",
+  "description": "Classical Guitar Music Database",
+  "scripts": {
+    "backend": "venv\\Scripts\\activate && python manage.py runserver",
+    "frontend": "cd frontend && npm run dev",
+    "start": "concurrently \"npm run backend\" \"npm run frontend\"",
+    "dev": "npm run start"
+  },
+  "keywords": [
+    "classical",
+    "guitar",
+    "music",
+    "database"
+  ],
+  "private": true,
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
