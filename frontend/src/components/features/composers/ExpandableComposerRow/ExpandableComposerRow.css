@@ -27,7 +27,7 @@
 
 .composer-row .composer-name-link {
   text-decoration: none;
-  color: #1976d2;
+  color: var(--color-accent);
   font-weight: 500;
 }
 
@@ -66,7 +66,7 @@
 .work-title {
   text-decoration: none;
   color: var(--color-accent);
-  font-size: 0.95rem;
+  font-size: 0.85rem;
 }
 
 .work-title:hover {

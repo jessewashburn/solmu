@@ -87,12 +87,15 @@
 }
 
 .data-table .link-secondary {
-  color: var(--color-text);
+  color: var(--color-accent);
   text-decoration: none;
+  transition: all 0.3s ease;
 }
 
 .data-table .link-secondary:hover {
-  color: var(--color-text-secondary);
+  color: var(--color-accent-hover);
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 /* Mobile Responsive Styles */
