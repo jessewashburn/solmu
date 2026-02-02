@@ -89,7 +89,7 @@ export default function HomePage() {
                 <div className="composer-metadata">
                   {composer.birth_year && (
                     <div className="composer-meta-item">
-                      <span className="meta-label">Born:</span>
+                      <span className="meta-label">Born</span>
                       <span className="meta-value">
                         {composer.death_year
                           ? `${composer.birth_year}–${composer.death_year}`
@@ -99,7 +99,7 @@ export default function HomePage() {
                   )}
                   {composer.country && (
                     <div className="composer-meta-item">
-                      <span className="meta-label">Country:</span>
+                      <span className="meta-label">Country</span>
                       <span className="meta-value">{composer.country.name}</span>
                     </div>
                   )}

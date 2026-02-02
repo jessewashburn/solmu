@@ -13,7 +13,7 @@
 }
 
 .detail-header h1 {
-  font-size: 2.5rem;
+  font-size: 3rem;
   margin-bottom: var(--spacing-sm);
   color: var(--color-header);
   font-weight: 700;
@@ -179,24 +179,17 @@
 }
 
 .external-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  background: var(--color-accent);
-  color: white !important;
+  display: inline-block;
+  margin-right: var(--spacing-md);
+  color: var(--color-accent) !important;
   text-decoration: none;
-  border-radius: var(--border-radius);
   font-weight: 600;
   transition: all 0.3s ease;
-  box-shadow: var(--shadow-sm);
 }
 
 .external-link:hover {
-  background: var(--color-accent-hover);
-  color: white !important;
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  text-decoration: underline;
+  color: var(--color-accent-hover) !important;
 }
 
 .back-link {
