@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../lib/api';
 import { useDebounce } from '../hooks/useDebounce';
@@ -47,7 +47,7 @@ export default function WorkListPage() {
   } = useFilters();
   const instrumentations = useInstrumentations();
   const countries = useCountries();
-  const debouncedSearch = useDebounce(searchQuery, 300);
+  const debouncedSearch = useDebounce(searchQuery, 500); // Increased from 300ms to reduce API calls
   
   const pageSize = 200;
 
@@ -131,11 +131,7 @@ export default function WorkListPage() {
     },
   ];
 
-  useEffect(() => {
-    fetchWorks();
-  }, [debouncedSearch, currentPage, compositionYearRange, selectedInstrumentation, selectedCountry]);
-
-  const fetchWorks = async () => {
+  const fetchWorks = useCallback(async () => {
     setLoading(true);
     setError(null);
     
@@ -177,7 +173,11 @@ export default function WorkListPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, pageSize, debouncedSearch, selectedInstrumentation, selectedCountry, compositionYearRange]);
+
+  useEffect(() => {
+    fetchWorks();
+  }, [fetchWorks]);
 
   const totalPages = Math.ceil(totalCount / pageSize);
 
