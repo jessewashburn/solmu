@@ -5,7 +5,7 @@
 ```
 frontend/src/
 ├── assets/                   # Static assets (images, icons)
-│   ├── Solmu.png
+│   ├── solmu.svg
 │   └── react.svg
 │
 ├── components/               # All React components

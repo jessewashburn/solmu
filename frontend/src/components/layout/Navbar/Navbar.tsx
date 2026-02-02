@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import './Navbar.css';
-import solmuLogo from '../../../assets/Solmu.png';
+import solmuLogo from '../../../assets/solmu.svg';
 
 export default function Navbar() {
   const location = useLocation();
