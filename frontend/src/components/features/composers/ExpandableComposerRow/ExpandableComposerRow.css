@@ -63,12 +63,13 @@
   align-items: center;
 }
 
-.work-link {
+.work-title {
   text-decoration: none;
-  color: #1976d2;
+  color: var(--color-accent);
+  font-size: 0.95rem;
 }
 
-.work-link:hover {
+.work-title:hover {
   text-decoration: underline;
 }
 

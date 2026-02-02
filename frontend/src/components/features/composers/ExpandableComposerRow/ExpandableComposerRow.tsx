@@ -90,7 +90,7 @@ export default function ExpandableComposerRow({ composer, onLoadWorks }: Expanda
                 <div className="works-list">
                   {works.map((work) => (
                     <div key={work.id} className="work-item">
-                      <Link to={`/works/${work.id}`} className="work-link">
+                      <Link to={`/works/${work.id}`} className="work-title">
                         {work.title}
                       </Link>
                       <span className="work-instrumentation">
