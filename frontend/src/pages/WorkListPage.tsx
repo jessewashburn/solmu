@@ -216,13 +216,6 @@ export default function WorkListPage() {
         onClearFilters={clearFilters}
       />
 
-      {/* Loading State */}
-      {loading && (
-        <div className="loading-state">
-          <p>Loading works...</p>
-        </div>
-      )}
-
       {/* Error State */}
       {error && (
         <div className="error-state">
