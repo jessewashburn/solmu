@@ -48,6 +48,7 @@ class Command(BaseCommand):
             'composers_updated': 0,
             'works_created': 0,
             'works_skipped': 0,
+            'rows_skipped': 0,  # Track malformed rows skipped during CSV parsing
             'errors': 0,
         }
         self.composer_cache = {}  # Cache to avoid duplicate lookups
@@ -93,12 +94,25 @@ class Command(BaseCommand):
         if os.path.exists(sheerpluck_file):
             self.stdout.write(f'Reading Sheerpluck CSV file: {sheerpluck_file}')
             try:
-                with open(sheerpluck_file, 'r', encoding='utf-8') as f:
-                    reader = csv.DictReader(f)
-                    for row in reader:
-                        row['_source'] = 'sheerpluck'
-                        all_rows.append(row)
-                        self.stats['sheerpluck_rows'] += 1
+                with open(sheerpluck_file, 'r', encoding='utf-8', errors='replace') as f:
+                    # Use QUOTE_ALL to handle problematic quote characters
+                    reader = csv.DictReader(f, quoting=csv.QUOTE_ALL, skipinitialspace=True)
+                    for line_num, row in enumerate(reader, start=2):  # start=2 because line 1 is header
+                        try:
+                            # Validate row has expected fields
+                            if not self._validate_csv_row(row, line_num, 'Sheerpluck'):
+                                self.stats['rows_skipped'] += 1
+                                continue
+                            row['_source'] = 'sheerpluck'
+                            row['_line_num'] = line_num
+                            all_rows.append(row)
+                            self.stats['sheerpluck_rows'] += 1
+                        except Exception as e:
+                            self.stats['errors'] += 1
+                            self.stats['rows_skipped'] += 1
+                            self.stdout.write(self.style.ERROR(
+                                f'Sheerpluck line {line_num}: Skipping malformed row - {str(e)}'
+                            ))
                 self.stdout.write(f'  Loaded {self.stats["sheerpluck_rows"]} rows from Sheerpluck')
             except Exception as e:
                 raise CommandError(f'Error reading Sheerpluck CSV: {str(e)}')
@@ -109,12 +123,25 @@ class Command(BaseCommand):
         if os.path.exists(imslp_file):
             self.stdout.write(f'Reading IMSLP CSV file: {imslp_file}')
             try:
-                with open(imslp_file, 'r', encoding='utf-8') as f:
-                    reader = csv.DictReader(f)
-                    for row in reader:
-                        row['_source'] = 'imslp'
-                        all_rows.append(row)
-                        self.stats['imslp_rows'] += 1
+                with open(imslp_file, 'r', encoding='utf-8', errors='replace') as f:
+                    # Use QUOTE_ALL to handle problematic quote characters
+                    reader = csv.DictReader(f, quoting=csv.QUOTE_ALL, skipinitialspace=True)
+                    for line_num, row in enumerate(reader, start=2):  # start=2 because line 1 is header
+                        try:
+                            # Validate row has expected fields
+                            if not self._validate_csv_row(row, line_num, 'IMSLP'):
+                                self.stats['rows_skipped'] += 1
+                                continue
+                            row['_source'] = 'imslp'
+                            row['_line_num'] = line_num
+                            all_rows.append(row)
+                            self.stats['imslp_rows'] += 1
+                        except Exception as e:
+                            self.stats['errors'] += 1
+                            self.stats['rows_skipped'] += 1
+                            self.stdout.write(self.style.ERROR(
+                                f'IMSLP line {line_num}: Skipping malformed row - {str(e)}'
+                            ))
                 self.stdout.write(f'  Loaded {self.stats["imslp_rows"]} rows from IMSLP')
             except Exception as e:
                 raise CommandError(f'Error reading IMSLP CSV: {str(e)}')
@@ -157,6 +184,66 @@ class Command(BaseCommand):
         # Print statistics
         self._print_stats(dry_run)
 
+    def _validate_csv_row(self, row, line_num, source):
+        """
+        Validate a CSV row has the expected structure and reasonable data.
+        Returns True if valid, False if should be skipped.
+        """
+        try:
+            # Check that we have the expected columns
+            expected_fields = ['ID', 'Name', 'Work', 'Instrumentation', 'Link']
+            missing_fields = [field for field in expected_fields if field not in row]
+            
+            if missing_fields:
+                self.stdout.write(self.style.ERROR(
+                    f'{source} line {line_num}: Missing expected fields: {missing_fields}'
+                ))
+                self.stats['errors'] += 1
+                return False
+            
+            # Check for obviously corrupted data (title too long indicates CSV parsing error)
+            work_title = row.get('Work', '').strip()
+            if len(work_title) > 200:
+                self.stdout.write(self.style.ERROR(
+                    f'{source} line {line_num}: Work title suspiciously long ({len(work_title)} chars) - '
+                    f'possible CSV parsing error. Title: {work_title[:100]}...'
+                ))
+                self.stats['errors'] += 1
+                return False
+            
+            # Check if title contains double commas (indicates unparsed CSV)
+            if ',,' in work_title:
+                self.stdout.write(self.style.ERROR(
+                    f'{source} line {line_num}: Work title contains ",," - '
+                    f'possible CSV parsing error. Title: {work_title[:100]}...'
+                ))
+                self.stats['errors'] += 1
+                return False
+            
+            # Check required fields have data
+            if not row.get('Name', '').strip():
+                self.stdout.write(self.style.WARNING(
+                    f'{source} line {line_num}: Missing composer name - skipping'
+                ))
+                self.stats['errors'] += 1
+                return False
+                
+            if not work_title:
+                self.stdout.write(self.style.WARNING(
+                    f'{source} line {line_num}: Missing work title - skipping'
+                ))
+                self.stats['errors'] += 1
+                return False
+            
+            return True
+            
+        except Exception as e:
+            self.stdout.write(self.style.ERROR(
+                f'{source} line {line_num}: Validation error - {str(e)}'
+            ))
+            self.stats['errors'] += 1
+            return False
+
     def _validate_row(self, row):
         """Validate a CSV row without saving to database"""
         try:
@@ -186,9 +273,10 @@ class Command(BaseCommand):
         try:
             # Determine data source
             source_name = row.get('_source', 'sheerpluck')
+            line_num = row.get('_line_num', 'unknown')
             data_source = self.sheerpluck_source if source_name == 'sheerpluck' else self.imslp_source
             
-            # Extract data
+            # Extract and clean data
             external_id = row.get('ID', '').strip()
             composer_name = row.get('Name', '').strip()
             birth_year = self._parse_year(row.get('Birth Year'))
@@ -197,6 +285,14 @@ class Command(BaseCommand):
             work_title = row.get('Work', '').strip()
             instrumentation = row.get('Instrumentation', '').strip()
             link = row.get('Link', '').strip()
+
+            # Additional validation: check for Unicode issues
+            if any(ord(c) > 127 for c in work_title):
+                # Check for problematic Unicode characters that might indicate corruption
+                if '\ufffd' in work_title:  # Replacement character indicates encoding error
+                    self.stdout.write(self.style.WARNING(
+                        f'{source_name} line {line_num}: Work title contains replacement character (encoding error)'
+                    ))
 
             # Skip if missing essential data
             if not composer_name or not work_title:
@@ -273,8 +369,10 @@ class Command(BaseCommand):
 
         except Exception as e:
             self.stats['errors'] += 1
+            line_num = row.get('_line_num', 'unknown')
+            source = row.get('_source', 'unknown')
             self.stdout.write(self.style.ERROR(
-                f"Error processing row {row.get('ID')}: {str(e)}"
+                f"Error processing {source} row {line_num} (ID: {row.get('ID', 'N/A')}): {str(e)}"
             ))
 
     def _get_or_create_composer(self, full_name, birth_year, death_year, country, data_source):
@@ -404,6 +502,8 @@ class Command(BaseCommand):
         self.stdout.write(f"Sheerpluck rows: {self.stats['sheerpluck_rows']}")
         self.stdout.write(f"IMSLP rows: {self.stats['imslp_rows']}")
         self.stdout.write(f"Total rows processed: {self.stats['total_rows']}")
+        if self.stats['rows_skipped'] > 0:
+            self.stdout.write(self.style.WARNING(f"Malformed rows skipped: {self.stats['rows_skipped']}"))
         self.stdout.write(f"Composers created: {self.stats['composers_created']}")
         self.stdout.write(f"Composers updated: {self.stats['composers_updated']}")
         self.stdout.write(f"Works created: {self.stats['works_created']}")
