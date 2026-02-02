@@ -14,7 +14,7 @@ export default function MetadataList({ items }: MetadataListProps) {
     <dl className="metadata-list">
       {items.map((item, index) => (
         <div key={index} className="metadata-row">
-          <dt className="metadata-label">{item.label}:</dt>
+          <dt className="metadata-label">{item.label}</dt>
           <dd className="metadata-value">{item.value}</dd>
         </div>
       ))}
