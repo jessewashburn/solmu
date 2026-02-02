@@ -478,6 +478,19 @@ class WorkViewSet(viewsets.ReadOnlyModelViewSet):
         'difficulty_level', 'is_verified'
     ]
     
+    def filter_queryset(self, queryset):
+        """Override to handle custom title sorting before OrderingFilter"""
+        # Get the ordering parameter before filters are applied
+        ordering_param = self.request.query_params.get('ordering', 'title')
+        
+        # Apply filters (search, instrumentation, etc) but skip ordering
+        for backend in list(self.filter_backends):
+            if backend == filters.OrderingFilter and ordering_param in ['title', '-title']:
+                continue  # Skip OrderingFilter for title, we'll handle it in get_queryset
+            queryset = backend().filter_queryset(self.request, queryset, self)
+        
+        return queryset
+    
     def get_serializer_class(self):
         if self.action == 'retrieve':
             return WorkDetailSerializer
@@ -486,26 +499,31 @@ class WorkViewSet(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         queryset = super().get_queryset()
         
-        # Apply default ordering that strips leading symbols
-        # Use RegexpReplace to remove leading non-alphanumeric characters for sorting
-        from django.db.models.functions import Replace, Lower
-        if not self.request.query_params.get('ordering'):
-            # Strip common leading symbols for natural alphabetical sorting
+        # Get the requested ordering parameter
+        ordering_param = self.request.query_params.get('ordering', 'title')
+        
+        # If sorting by title (default or explicit), apply custom sorting that strips leading symbols
+        if ordering_param == 'title' or ordering_param == '-title':
+            from django.db.models.functions import Lower, Substr, Length
+            from django.db.models import Case, When, Value as V, IntegerField, CharField
+            from django.db.models.expressions import Func
+            
+            # Create a custom sorting key that finds the first alphanumeric character
+            # and sorts by everything starting from that point
             queryset = queryset.annotate(
-                title_for_sort=Replace(
-                    Replace(
-                        Replace(
-                            Replace(
-                                Replace(Lower('title'), Value('#'), Value('')),
-                                Value("'"), Value('')
-                            ),
-                            Value('"'), Value('')
-                        ),
-                        Value('&'), Value('')
-                    ),
-                    Value('('), Value('')
+                title_lower=Lower('title'),
+                # For each position, check if it's alphanumeric
+                # This is a simplified approach - we'll just remove common leading symbols
+                title_for_sort=Case(
+                    # Starts with quote
+                    When(title_lower__regex=r'^["\']+', then=Substr(Lower('title'), 2)),
+                    # Starts with other common symbols
+                    When(title_lower__regex=r'^[#&*().,\-/]+', then=Lower('title')),
+                    # Default: use as-is
+                    default=Lower('title'),
+                    output_field=CharField()
                 )
-            ).order_by('title_for_sort')
+            ).order_by('title_for_sort' if ordering_param == 'title' else '-title_for_sort')
         
         # Filter by instrumentation (using instrumentation name)
         # Handles variations like "solo" matching "Solo Guitar", "Guitar Solo", etc.
