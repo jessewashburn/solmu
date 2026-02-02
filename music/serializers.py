@@ -123,7 +123,7 @@ class WorkDetailSerializer(serializers.ModelSerializer):
             'duration_minutes', 'key_signature',
             'instrumentation_category', 'instrumentation_detail',
             'difficulty_level', 'description', 'movements',
-            'imslp_url', 'youtube_url', 'score_url',
+            'imslp_url', 'sheerpluck_url', 'youtube_url', 'score_url',
             'data_source', 'is_verified', 'view_count',
             'tags', 'created_at', 'updated_at'
         ]

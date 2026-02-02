@@ -244,8 +244,8 @@ class Command(BaseCommand):
                     # Store link in appropriate field based on source
                     if source_name == 'imslp' and not work.imslp_url:
                         work.imslp_url = link
-                    elif source_name == 'sheerpluck' and not work.score_url:
-                        work.score_url = link
+                    elif source_name == 'sheerpluck' and not work.sheerpluck_url:
+                        work.sheerpluck_url = link
                 work.save()
                 self.stats['works_skipped'] += 1
             else:
@@ -266,7 +266,7 @@ class Command(BaseCommand):
                     if source_name == 'imslp':
                         work_data['imslp_url'] = link
                     elif source_name == 'sheerpluck':
-                        work_data['score_url'] = link
+                        work_data['sheerpluck_url'] = link
                 
                 work = Work.objects.create(**work_data)
                 self.stats['works_created'] += 1

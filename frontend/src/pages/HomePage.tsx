@@ -144,6 +144,31 @@ export default function HomePage() {
                 ))}
               </div>
             )}
+
+            {(highlightedWork.imslp_url || highlightedWork.sheerpluck_url || highlightedWork.youtube_url || highlightedWork.score_url) && (
+              <div className="work-links">
+                {highlightedWork.imslp_url && (
+                  <a href={highlightedWork.imslp_url} target="_blank" rel="noopener noreferrer" className="work-link">
+                    View on IMSLP →
+                  </a>
+                )}
+                {highlightedWork.sheerpluck_url && (
+                  <a href={highlightedWork.sheerpluck_url} target="_blank" rel="noopener noreferrer" className="work-link">
+                    View on SheerPluck →
+                  </a>
+                )}
+                {highlightedWork.youtube_url && (
+                  <a href={highlightedWork.youtube_url} target="_blank" rel="noopener noreferrer" className="work-link">
+                    View on YouTube →
+                  </a>
+                )}
+                {highlightedWork.score_url && (
+                  <a href={highlightedWork.score_url} target="_blank" rel="noopener noreferrer" className="work-link">
+                    View Score →
+                  </a>
+                )}
+              </div>
+            )}
           </div>
         ) : (
           <div className="highlighted-work-card error">

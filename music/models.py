@@ -195,9 +195,10 @@ class Work(models.Model):
     key_signature = models.CharField(max_length=50, null=True, blank=True)
     
     # External Resources
-    imslp_url = models.URLField(max_length=255, null=True, blank=True)
-    youtube_url = models.URLField(max_length=255, null=True, blank=True)
-    score_url = models.URLField(max_length=255, null=True, blank=True)
+    imslp_url = models.URLField(max_length=500, null=True, blank=True)
+    sheerpluck_url = models.URLField(max_length=500, null=True, blank=True)
+    youtube_url = models.URLField(max_length=500, null=True, blank=True)
+    score_url = models.URLField(max_length=500, null=True, blank=True)
     
     # Metadata
     data_source = models.ForeignKey(DataSource, on_delete=models.SET_NULL, null=True, blank=True)

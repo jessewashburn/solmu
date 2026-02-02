@@ -28,6 +28,10 @@ export interface Work {
   duration_minutes: number | null;
   difficulty_level: number | null;
   movements: number | null;
+  imslp_url: string | null;
+  sheerpluck_url: string | null;
+  youtube_url: string | null;
+  score_url: string | null;
   tags: Tag[];
   created_at: string;
   updated_at: string;
