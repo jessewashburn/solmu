@@ -178,3 +178,14 @@ if DEBUG:
 else:
     CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', '').split(',') if os.getenv('CORS_ALLOWED_ORIGINS') else []
 CORS_ALLOW_CREDENTIALS = True
+
+# Cache settings
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'cgmd-cache',
+        'OPTIONS': {
+            'MAX_ENTRIES': 2000,
+        }
+    }
+}

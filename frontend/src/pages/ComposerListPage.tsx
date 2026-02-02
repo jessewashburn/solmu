@@ -52,7 +52,7 @@ export default function ComposerListPage() {
   } = useFilters();
   const instrumentations = useInstrumentations();
   const countries = useCountries();
-  const debouncedSearch = useDebounce(searchQuery, 300);
+  const debouncedSearch = useDebounce(searchQuery, 150);
   
   const pageSize = 200;
 
@@ -61,11 +61,12 @@ export default function ComposerListPage() {
     if (allComposers.length === 0) return null;
     return new Fuse<Composer>(allComposers, {
       keys: ['full_name'],
-      threshold: 0.4,
+      threshold: 0.3,
       includeScore: true,
       minMatchCharLength: 2,
       ignoreLocation: true,
-      distance: 100,
+      distance: 200,
+      useExtendedSearch: false,
     });
   }, [allComposers]);
 
@@ -100,6 +101,7 @@ export default function ComposerListPage() {
     
     try {
       if (debouncedSearch) {
+        // Use client-side fuzzy search with preloaded data
         if (allComposers.length > 0 && fuse) {
           // Fast substring search first (works well since data is presorted)
           const searchLower = debouncedSearch.toLowerCase();
@@ -112,20 +114,34 @@ export default function ComposerListPage() {
             // Use substring matches if found (faster)
             matches = substringMatches;
           } else {
-            // Fall back to fuzzy search for typos
-            const fuseResults = fuse.search(debouncedSearch);
+            // Fall back to fuzzy search for typos - limit results
+            const fuseResults = fuse.search(debouncedSearch, { limit: 500 });
             matches = fuseResults.map((result) => result.item);
           }
           
-          setComposers(matches.slice(0, pageSize));
+          // Limit displayed results for performance
+          const displayLimit = Math.min(matches.length, pageSize);
+          setComposers(matches.slice(0, displayLimit));
           setTotalCount(matches.length);
+          setLoading(false);
+          return; // Exit early to prevent loading all composers
         } else {
-          // Fallback: load composers if not preloaded yet
+          // Fallback: wait for composers to preload
           const response = await api.get('/composers/', {
             params: { page_size: 20000, ordering: 'last_name,first_name' },
           });
           const loadedComposers = response.data.results || response.data;
           setAllComposers(loadedComposers);
+          
+          // Then filter the results
+          const searchLower = debouncedSearch.toLowerCase();
+          const matches = loadedComposers.filter((c: Composer) =>
+            c.full_name.toLowerCase().includes(searchLower)
+          );
+          setComposers(matches.slice(0, pageSize));
+          setTotalCount(matches.length);
+          setLoading(false);
+          return;
         }
       } else {
         // No search query - use regular pagination with filters

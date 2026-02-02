@@ -375,13 +375,23 @@ class Command(BaseCommand):
             return None
 
     def _normalize_string(self, text):
-        """Normalize string for search (lowercase, remove accents)"""
+        """Normalize string for search (lowercase, remove accents, strip leading symbols)"""
+        import re
         if not text:
             return ''
         # Remove accents
         nfkd = unicodedata.normalize('NFKD', text)
         ascii_text = nfkd.encode('ASCII', 'ignore').decode('UTF-8')
-        return ascii_text.lower()
+        normalized = ascii_text.lower()
+        
+        # Strip leading non-alphanumeric characters for better alphabetical sorting
+        normalized = re.sub(r'^[^a-z0-9]+', '', normalized)
+        
+        # If the result is empty (all non-ASCII), keep the original lowercased
+        if not normalized:
+            normalized = text.lower()
+        
+        return normalized
 
     def _print_stats(self, dry_run):
         """Print import statistics"""

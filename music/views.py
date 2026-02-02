@@ -36,6 +36,8 @@ class CountryViewSet(viewsets.ReadOnlyModelViewSet):
     ordering = ['name']
     
     def get_queryset(self):
+        from django.core.cache import cache
+        
         queryset = super().get_queryset()
         
         # By default, exclude descriptive entries that aren't real countries
@@ -68,11 +70,19 @@ class InstrumentationCategoryViewSet(viewsets.ReadOnlyModelViewSet):
     
     def list(self, request, *args, **kwargs):
         """Override list to return curated categories instead of raw database values"""
+        from django.core.cache import cache
+        
         include_all = request.query_params.get('include_all', 'false').lower() == 'true'
         
         if include_all:
             # Return all database values
             return super().list(request, *args, **kwargs)
+        
+        # Check cache first
+        cache_key = 'instrumentation_categories_curated'
+        cached_result = cache.get(cache_key)
+        if cached_result is not None:
+            return Response(cached_result)
         
         # Return curated, ordered categories
         from .utils import get_instrumentation_variations
@@ -128,6 +138,8 @@ class InstrumentationCategoryViewSet(viewsets.ReadOnlyModelViewSet):
                         'sort_order': db_entry.sort_order if hasattr(db_entry, 'sort_order') else 0
                     })
         
+        # Cache for 1 hour
+        cache.set(cache_key, results, 3600)
         return Response(results)
     
     def get_queryset(self):
@@ -502,28 +514,10 @@ class WorkViewSet(viewsets.ReadOnlyModelViewSet):
         # Get the requested ordering parameter
         ordering_param = self.request.query_params.get('ordering', 'title')
         
-        # If sorting by title (default or explicit), apply custom sorting that strips leading symbols
+        # If sorting by title (default or explicit), use title_normalized for better performance
         if ordering_param == 'title' or ordering_param == '-title':
-            from django.db.models.functions import Lower, Substr, Length
-            from django.db.models import Case, When, Value as V, IntegerField, CharField
-            from django.db.models.expressions import Func
-            
-            # Create a custom sorting key that finds the first alphanumeric character
-            # and sorts by everything starting from that point
-            queryset = queryset.annotate(
-                title_lower=Lower('title'),
-                # For each position, check if it's alphanumeric
-                # This is a simplified approach - we'll just remove common leading symbols
-                title_for_sort=Case(
-                    # Starts with quote
-                    When(title_lower__regex=r'^["\']+', then=Substr(Lower('title'), 2)),
-                    # Starts with other common symbols
-                    When(title_lower__regex=r'^[#&*().,\-/]+', then=Lower('title')),
-                    # Default: use as-is
-                    default=Lower('title'),
-                    output_field=CharField()
-                )
-            ).order_by('title_for_sort' if ordering_param == 'title' else '-title_for_sort')
+            # Use title_normalized which has leading symbols stripped and is indexed
+            queryset = queryset.order_by('title_normalized' if ordering_param == 'title' else '-title_normalized')
         
         # Filter by instrumentation (using instrumentation name)
         # Handles variations like "solo" matching "Solo Guitar", "Guitar Solo", etc.
