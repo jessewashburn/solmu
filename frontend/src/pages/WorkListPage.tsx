@@ -95,7 +95,7 @@ export default function WorkListPage() {
         </span>
       ),
       accessor: (work) => (
-        <Link to={`/works/${work.id}`} className="link-primary">
+        <Link to={`/works/${work.id}`} state={{ from: 'works' }} className="link-primary">
           {work.title}
         </Link>
       ),

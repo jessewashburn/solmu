@@ -48,6 +48,8 @@ export default function ComposerDetailPage() {
 
   return (
     <div className="page-container-narrow">
+      <Link to="/composers" className="back-link">← Back to Composers</Link>
+      
       <header className="detail-header">
         <h1>{composer.full_name}</h1>
         <p className="detail-subtitle">
@@ -87,8 +89,6 @@ export default function ComposerDetailPage() {
           ))}
         </div>
       </section>
-
-      <Link to="/" className="back-link">← Back to Composers</Link>
     </div>
   );
 }

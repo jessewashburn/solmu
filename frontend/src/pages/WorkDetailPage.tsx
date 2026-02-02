@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useLocation } from 'react-router-dom';
 import { workService } from '../lib';
 import { Work } from '../types';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
@@ -9,8 +9,12 @@ import '../styles/shared/DetailPage.css';
 
 export default function WorkDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const location = useLocation();
   const [work, setWork] = useState<Work | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Check if we came from the works list
+  const fromWorks = location.state?.from === 'works';
 
   useEffect(() => {
     loadWork();
@@ -41,11 +45,15 @@ export default function WorkDetailPage() {
 
   return (
     <div className="page-container-narrow">
-      {work.composer && (
+      {fromWorks ? (
+        <Link to="/works" className="back-link">
+          ← Back to Works
+        </Link>
+      ) : work.composer ? (
         <Link to={`/composers/${work.composer.id}`} className="back-link">
           ← Back to Composer
         </Link>
-      )}
+      ) : null}
       
       <header className="detail-header">
         <h1>{work.title}</h1>
