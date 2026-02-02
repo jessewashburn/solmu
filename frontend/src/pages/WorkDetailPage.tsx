@@ -41,6 +41,12 @@ export default function WorkDetailPage() {
 
   return (
     <div className="page-container-narrow">
+      {work.composer && (
+        <Link to={`/composers/${work.composer.id}`} className="back-link">
+          ← Back to Composer
+        </Link>
+      )}
+      
       <header className="detail-header">
         <h1>{work.title}</h1>
         <p className="detail-subtitle">
@@ -97,12 +103,6 @@ export default function WorkDetailPage() {
             )}
           </div>
         </section>
-      )}
-
-      {work.composer && (
-        <Link to={`/composers/${work.composer.id}`} className="back-link">
-          ← Back to Composer
-        </Link>
       )}
     </div>
   );
