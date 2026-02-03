@@ -8,6 +8,7 @@ import unicodedata
 from django.core.management.base import BaseCommand
 from django.db import transaction
 from music.models import Country, InstrumentationCategory, DataSource, Composer, Work
+from music.utils import generate_title_sort_key
 
 
 class Command(BaseCommand):
@@ -174,6 +175,7 @@ class Command(BaseCommand):
                 composer=composer,
                 title=title,
                 title_normalized=self.normalize(title),
+                title_sort_key=generate_title_sort_key(title),
                 instrumentation_category=instr,
                 data_source=source,
                 external_id=row.get('ID', '').strip() or None,

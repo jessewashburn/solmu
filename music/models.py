@@ -171,6 +171,8 @@ class Work(models.Model):
     # Work Info
     title = models.CharField(max_length=500)
     title_normalized = models.CharField(max_length=500, help_text="Lowercase, accents removed for search")
+    title_sort_key = models.CharField(max_length=500, db_index=True, null=True, blank=True,
+                                     help_text="Normalized title for alphabetical sorting")
     subtitle = models.TextField(null=True, blank=True)
     opus_number = models.CharField(max_length=50, null=True, blank=True)
     catalog_number = models.CharField(max_length=100, null=True, blank=True)

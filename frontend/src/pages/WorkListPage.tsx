@@ -139,7 +139,6 @@ export default function WorkListPage() {
       const params: any = {
         page: currentPage,
         page_size: pageSize,
-        ordering: 'title',
       };
 
       if (debouncedSearch) {

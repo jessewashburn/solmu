@@ -525,28 +525,15 @@ class WorkViewSet(viewsets.ReadOnlyModelViewSet):
     """
     queryset = Work.objects.select_related(
         'composer', 'instrumentation_category'
-    ).filter(is_public=True).distinct()
+    ).filter(is_public=True).order_by('title_sort_key').distinct()
     filter_backends = [DjangoFilterBackend, TrigramSearchFilter, filters.OrderingFilter]
     search_fields = ['title', 'title_normalized', 'composer__full_name', 'opus_number']
-    ordering_fields = ['title', 'composition_year', 'difficulty_level', 'view_count']
-    ordering = ['title']
+    ordering_fields = ['title', 'title_sort_key', 'composition_year', 'difficulty_level', 'view_count']
+    ordering = ['title_sort_key']
     filterset_fields = [
         'composer', 'instrumentation_category', 
         'difficulty_level', 'is_verified'
     ]
-    
-    def filter_queryset(self, queryset):
-        """Override to handle custom title sorting before OrderingFilter"""
-        # Get the ordering parameter before filters are applied
-        ordering_param = self.request.query_params.get('ordering', 'title')
-        
-        # Apply filters (search, instrumentation, etc) but skip ordering
-        for backend in list(self.filter_backends):
-            if backend == filters.OrderingFilter and ordering_param in ['title', '-title']:
-                continue  # Skip OrderingFilter for title, we'll handle it in get_queryset
-            queryset = backend().filter_queryset(self.request, queryset, self)
-        
-        return queryset
     
     def get_serializer_class(self):
         if self.action == 'retrieve':

@@ -305,3 +305,92 @@ def get_instrumentation_variations() -> dict:
         'Bass Guitar': ['Bass Guitar Solo', 'bass guitar', 'Electric Bass'],
         '12-String Guitar': ['12-string guitar', '12-string', 'twelve-string'],
     }
+
+
+def generate_title_sort_key(title: str) -> str:
+    """
+    Generate a sort key for intelligent alphabetical sorting of work titles.
+    
+    Sort buckets (prefixes):
+      1) Latin-letter titles      -> "1|<folded>"
+      2) Numeric-leading titles   -> "2|<folded>"
+      3) Other-letter titles      -> "3|<folded>"
+      4) Symbol-only / empty      -> "4|<original-casefold>"
+    
+    Examples:
+    - "Cadenza" -> 1|cadenza
+    - À bout portant -> 1|a bout portant
+    - 10 Studies -> 2|10 studies
+    - Ιθάκη (Greek) -> 3|ιθάκη
+    - _____ -> 4|_____
+    """
+    # Small, targeted expansions that stdlib normalization won't turn into ASCII sequences
+    EXTENDED_LATIN_MAP = str.maketrans({
+        'Æ': 'AE', 'æ': 'ae',
+        'Œ': 'OE', 'œ': 'oe',
+        'Ø': 'O',  'ø': 'o',
+        'Ð': 'D',  'ð': 'd',
+        'Þ': 'TH', 'þ': 'th',
+        'ẞ': 'ss', 'ß': 'ss',
+        'Ł': 'L',  'ł': 'l',
+        'Đ': 'D',  'đ': 'd',
+    })
+    
+    def strip_leading_junk(s: str) -> str:
+        """Remove leading chars that are not letters/digits using Unicode categories."""
+        if not s:
+            return ''
+        
+        s = unicodedata.normalize('NFKC', s)
+        
+        i = 0
+        while i < len(s):
+            ch = s[i]
+            cat = unicodedata.category(ch)
+            # Keep if letter or number
+            if cat[0] in ('L', 'N'):
+                break
+            # Otherwise drop punctuation, symbols, marks, separators, format chars
+            i += 1
+        
+        return s[i:].strip()
+    
+    def remove_combining_marks(s: str) -> str:
+        """Remove diacritics by decomposing and dropping combining marks."""
+        decomp = unicodedata.normalize('NFKD', s)
+        return ''.join(c for c in decomp if unicodedata.category(c) != 'Mn')
+    
+    def is_latin_letter(ch: str) -> bool:
+        """Detect Latin script by Unicode name."""
+        try:
+            return unicodedata.category(ch).startswith('L') and 'LATIN' in unicodedata.name(ch)
+        except ValueError:
+            return False
+    
+    if not title:
+        return "4|"
+    
+    original = unicodedata.normalize('NFKC', title).casefold()
+    core = strip_leading_junk(title)
+    
+    if not core:
+        return f"4|{original}"
+    
+    # Expand ligatures etc.
+    core = core.translate(EXTENDED_LATIN_MAP)
+    
+    first = core[0]
+    
+    # Bucket decision
+    if first.isdigit():
+        # Keep digits but casefold everything else
+        return f"2|{unicodedata.normalize('NFKC', core).casefold()}"
+    
+    if is_latin_letter(first):
+        # For Latin titles: remove diacritics so É ~ E
+        folded = remove_combining_marks(core)
+        folded = unicodedata.normalize('NFKC', folded).casefold()
+        return f"1|{folded}"
+    
+    # Other scripts: keep them, but normalize + casefold
+    return f"3|{unicodedata.normalize('NFKC', core).casefold()}"
