@@ -107,8 +107,16 @@ class Command(BaseCommand):
         self.stdout.write(f'Creating {len(composers_dict)} composers...')
         composer_objs = []
         for (name, birth, death), data in composers_dict.items():
-            last_name = name.split()[-1] if ' ' in name else name
-            first_name = name.rsplit(' ', 1)[0] if ' ' in name else ''
+            # Parse "Last, First" format from CSV
+            if ',' in name:
+                parts = name.split(',', 1)
+                last_name = parts[0].strip()
+                first_name = parts[1].strip() if len(parts) > 1 else ''
+            else:
+                # Fallback for names without comma
+                last_name = name.split()[-1] if ' ' in name else name
+                first_name = name.rsplit(' ', 1)[0] if ' ' in name else ''
+            
             country = country_map.get(data['country'])
             
             composer_objs.append(Composer(

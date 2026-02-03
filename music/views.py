@@ -214,10 +214,10 @@ class ComposerViewSet(viewsets.ReadOnlyModelViewSet):
     """
     queryset = Composer.objects.select_related('country', 'data_source').annotate(
         work_count=Count('works', filter=Q(works__is_public=True))
-    ).all()
+    )
     filter_backends = [DjangoFilterBackend, TrigramSearchFilter, filters.OrderingFilter]
     search_fields = ['full_name', 'last_name', 'first_name', 'name_normalized']
-    ordering_fields = ['last_name', 'birth_year', 'death_year']
+    ordering_fields = ['last_name', 'first_name', 'birth_year', 'death_year']
     ordering = ['last_name', 'first_name']
     filterset_fields = ['period', 'country', 'is_living', 'is_verified']
     
@@ -241,9 +241,15 @@ class ComposerViewSet(viewsets.ReadOnlyModelViewSet):
             # Build query with all variations
             query = Q()
             for term in search_terms:
-                query |= Q(works__instrumentation_category__name__icontains=term)
+                query |= Q(instrumentation_category__name__icontains=term)
             
-            queryset = queryset.filter(query).distinct()
+            # Use exists subquery to avoid duplicates and distinct() issues
+            from django.db.models import Exists, OuterRef
+            matching_works = Work.objects.filter(
+                composer=OuterRef('pk'),
+                is_public=True
+            ).filter(query)
+            queryset = queryset.filter(Exists(matching_works))
         
         # Filter by birth year range
         birth_year_min = self.request.query_params.get('birth_year_min')
@@ -446,15 +452,20 @@ class ComposerViewSet(viewsets.ReadOnlyModelViewSet):
             if country_name in country_variations:
                 search_terms.extend(country_variations[country_name])
             
-            # Build query with all variations
+            # Build query variations
             query = Q()
             for term in search_terms:
                 query |= Q(country__name__icontains=term)
                 query |= Q(country_description__icontains=term)
             
-            queryset = queryset.filter(query).distinct()
+            # Use direct filter on country fields - no joins needed, so no duplicates
+            queryset = queryset.filter(query)
         
-        return queryset
+        # Force ordering after all filters
+        # This ensures PostgreSQL maintains alphabetical order
+        ordering = self.request.query_params.get('ordering', 'last_name,first_name')
+        order_fields = [f.strip() for f in ordering.split(',')]
+        return queryset.order_by(*order_fields)
     
     def get_serializer_class(self):
         if self.action == 'retrieve':
