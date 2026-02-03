@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo } from 'react';
-import Fuse from 'fuse.js';
 import api from '../lib/api';
 import { useDebounce } from '../hooks/useDebounce';
 import { useInstrumentations } from '../hooks/useInstrumentations';
@@ -34,7 +33,6 @@ interface Composer {
 
 export default function ComposerListPage() {
   const [composers, setComposers] = useState<Composer[]>([]);
-  const [allComposers, setAllComposers] = useState<Composer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -56,123 +54,48 @@ export default function ComposerListPage() {
   
   const pageSize = 200;
 
-  // Memoized Fuse instance - only recreate when allComposers changes
-  const fuse = useMemo(() => {
-    if (allComposers.length === 0) return null;
-    return new Fuse<Composer>(allComposers, {
-      keys: ['full_name'],
-      threshold: 0.3,
-      includeScore: true,
-      minMatchCharLength: 2,
-      ignoreLocation: true,
-      distance: 200,
-      useExtendedSearch: false,
-    });
-  }, [allComposers]);
-
   useEffect(() => {
     fetchComposers();
   }, [debouncedSearch, currentPage, birthYearRange, selectedInstrumentation, selectedCountry]);
-
-  // Pre-load all composers in the background for instant fuzzy search
-  useEffect(() => {
-    const preloadComposers = async () => {
-      if (allComposers.length === 0) {
-        try {
-          const response = await api.get('/composers/', {
-            params: { page_size: 20000, ordering: 'last_name,first_name' },
-          });
-          const loadedComposers = response.data.results || response.data;
-          setAllComposers(loadedComposers);
-        } catch (err) {
-          console.error('Error preloading composers:', err);
-        }
-      }
-    };
-    
-    // Preload after a short delay to not block initial render
-    const timer = setTimeout(preloadComposers, 500);
-    return () => clearTimeout(timer);
-  }, []);
 
   const fetchComposers = async () => {
     setLoading(true);
     setError(null);
     
     try {
+      // Use server-side search with database indexes (fast!)
+      const params: any = {
+        page: currentPage,
+        page_size: pageSize,
+        ordering: 'last_name,first_name',
+      };
+      
+      // Add search query if present
       if (debouncedSearch) {
-        // Use client-side fuzzy search with preloaded data
-        if (allComposers.length > 0 && fuse) {
-          // Fast substring search first (works well since data is presorted)
-          const searchLower = debouncedSearch.toLowerCase();
-          const substringMatches = allComposers.filter(c => 
-            c.full_name.toLowerCase().includes(searchLower)
-          );
-          
-          let matches: Composer[];
-          if (substringMatches.length > 0) {
-            // Use substring matches if found (faster)
-            matches = substringMatches;
-          } else {
-            // Fall back to fuzzy search for typos - limit results
-            const fuseResults = fuse.search(debouncedSearch, { limit: 500 });
-            matches = fuseResults.map((result) => result.item);
-          }
-          
-          // Limit displayed results for performance
-          const displayLimit = Math.min(matches.length, pageSize);
-          setComposers(matches.slice(0, displayLimit));
-          setTotalCount(matches.length);
-          setLoading(false);
-          return; // Exit early to prevent loading all composers
-        } else {
-          // Fallback: wait for composers to preload
-          const response = await api.get('/composers/', {
-            params: { page_size: 20000, ordering: 'last_name,first_name' },
-          });
-          const loadedComposers = response.data.results || response.data;
-          setAllComposers(loadedComposers);
-          
-          // Then filter the results
-          const searchLower = debouncedSearch.toLowerCase();
-          const matches = loadedComposers.filter((c: Composer) =>
-            c.full_name.toLowerCase().includes(searchLower)
-          );
-          setComposers(matches.slice(0, pageSize));
-          setTotalCount(matches.length);
-          setLoading(false);
-          return;
-        }
-      } else {
-        // No search query - use regular pagination with filters
-        const params: any = {
-          page: currentPage,
-          page_size: pageSize,
-          ordering: 'last_name,first_name',
-        };
-        
-        // Add instrumentation filter if selected
-        if (selectedInstrumentation) {
-          params.instrumentation = selectedInstrumentation;
-        }
-        
-        // Add country filter if selected
-        if (selectedCountry) {
-          params.country_name = selectedCountry;
-        }
-        
-        // Add birth year filters if set
-        if (birthYearRange[0] > 1400) {
-          params.birth_year_min = birthYearRange[0];
-        }
-        if (birthYearRange[1] < 2025) {
-          params.birth_year_max = birthYearRange[1];
-        }
-
-        const response = await api.get('/composers/', { params });
-        setComposers(response.data.results || response.data);
-        setTotalCount(response.data.count || response.data.length);
+        params.search = debouncedSearch;
       }
+      
+      // Add instrumentation filter if selected
+      if (selectedInstrumentation) {
+        params.instrumentation = selectedInstrumentation;
+      }
+      
+      // Add country filter if selected
+      if (selectedCountry) {
+        params.country_name = selectedCountry;
+      }
+      
+      // Add birth year filters if set
+      if (birthYearRange[0] > 1400) {
+        params.birth_year_min = birthYearRange[0];
+      }
+      if (birthYearRange[1] < 2025) {
+        params.birth_year_max = birthYearRange[1];
+      }
+
+      const response = await api.get('/composers/', { params });
+      setComposers(response.data.results || response.data);
+      setTotalCount(response.data.count || response.data.length);
     } catch (err) {
       console.error('Error fetching composers:', err);
       setError('Failed to load composers. Please try again.');
@@ -181,21 +104,11 @@ export default function ComposerListPage() {
     }
   };
 
-  // Apply sorting and advanced filters to displayed composers
+  // Apply sorting to displayed composers (backend already filters)
   const sortedComposers = useMemo(() => {
-    let filtered = composers;
+    if (!sortColumn) return composers;
     
-    // Apply birth year filter (only when not searching, as search uses allComposers)
-    if (!debouncedSearch && (birthYearRange[0] > 1400 || birthYearRange[1] < 2025)) {
-      filtered = filtered.filter(c => {
-        const birthYear = c.birth_year || c.death_year || 1700;
-        return birthYear >= birthYearRange[0] && birthYear <= birthYearRange[1];
-      });
-    }
-    
-    if (!sortColumn) return filtered;
-    
-    const sorted = [...filtered].sort((a, b) => {
+    const sorted = [...composers].sort((a, b) => {
       let aVal: any;
       let bVal: any;
       
@@ -224,7 +137,7 @@ export default function ComposerListPage() {
     });
     
     return sorted;
-  }, [composers, sortColumn, sortDirection, birthYearRange, selectedInstrumentation, selectedCountry, allComposers.length]);
+  }, [composers, sortColumn, sortDirection]);
 
   const loadComposerWorks = async (composerId: number): Promise<Work[]> => {
     try {
@@ -242,7 +155,7 @@ export default function ComposerListPage() {
     <div className="list-page">
       <header className="page-header">
         <h1>Composers</h1>
-        <p>Browse {loading && totalCount === 0 ? '...' : totalCount.toLocaleString()} classical guitar composers</p>
+        <p>Browse {loading && totalCount === 0 ? '...' : (totalCount || 0).toLocaleString()} classical guitar composers</p>
       </header>
 
       <SearchBar

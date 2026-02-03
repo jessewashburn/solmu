@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { searchService } from '../lib';
+import { workService, composerService } from '../lib';
 import { Work, Composer } from '../types';
 import { useDebounce } from '../hooks/useDebounce';
 
@@ -33,12 +33,16 @@ export default function SearchPage() {
     setError(null);
     
     try {
-      const result = await searchService.fuzzySearchAll(searchQuery);
+      // Use server-side search (fast with database indexes)
+      const [worksResponse, composersResponse] = await Promise.all([
+        workService.getAll(1, searchQuery),
+        composerService.getAll(1, searchQuery),
+      ]);
       
       // Only update state if this is still the most recent search
       if (currentSearchId === searchCounterRef.current) {
-        setWorks(result.works);
-        setComposers(result.composers);
+        setWorks(worksResponse.results);
+        setComposers(composersResponse.results);
         setLoading(false);
       }
     } catch (error) {
