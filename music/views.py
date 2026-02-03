@@ -217,7 +217,14 @@ class ComposerViewSet(viewsets.ReadOnlyModelViewSet):
     )
     filter_backends = [DjangoFilterBackend, TrigramSearchFilter, filters.OrderingFilter]
     search_fields = ['full_name', 'last_name', 'first_name', 'name_normalized']
-    ordering_fields = ['last_name', 'first_name', 'birth_year', 'death_year']
+    ordering_fields = [
+        'last_name', 
+        'first_name', 
+        'birth_year', 
+        'death_year',
+        'country__name',
+        'work_count'
+    ]
     ordering = ['last_name', 'first_name']
     filterset_fields = ['period', 'country', 'is_living', 'is_verified']
     
@@ -528,7 +535,15 @@ class WorkViewSet(viewsets.ReadOnlyModelViewSet):
     ).filter(is_public=True).order_by('title_sort_key').distinct()
     filter_backends = [DjangoFilterBackend, TrigramSearchFilter, filters.OrderingFilter]
     search_fields = ['title', 'title_normalized', 'composer__full_name', 'opus_number']
-    ordering_fields = ['title', 'title_sort_key', 'composition_year', 'difficulty_level', 'view_count']
+    ordering_fields = [
+        'title', 
+        'title_sort_key', 
+        'composition_year', 
+        'difficulty_level', 
+        'view_count',
+        'composer__full_name',
+        'instrumentation_category__name'
+    ]
     ordering = ['title_sort_key']
     filterset_fields = [
         'composer', 'instrumentation_category', 

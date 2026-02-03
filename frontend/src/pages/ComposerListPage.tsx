@@ -34,10 +34,13 @@ interface Composer {
 export default function ComposerListPage() {
   const [composers, setComposers] = useState<Composer[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sortLoading, setSortLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  const [backendOrderField, setBackendOrderField] = useState<string>('last_name,first_name');
+  const [backendOrderDirection, setBackendOrderDirection] = useState<'asc' | 'desc'>('asc');
   const { sortColumn, sortDirection, handleSort } = useSort<'name' | 'country' | 'birth_year' | 'work_count'>();
   const {
     yearRange: birthYearRange,
@@ -54,12 +57,35 @@ export default function ComposerListPage() {
   
   const pageSize = 200;
 
+  // Unified sort handler for all columns
+  const handleColumnSort = (column: 'name' | 'country' | 'birth_year' | 'work_count') => {
+    handleSort(column);
+    const newDirection = sortColumn === column && sortDirection === 'asc' ? 'desc' : 'asc';
+    
+    // Map column to backend field
+    const fieldMap: Record<typeof column, string> = {
+      name: 'last_name,first_name',
+      country: 'country__name',
+      birth_year: 'birth_year',
+      work_count: 'work_count'
+    };
+    
+    setBackendOrderField(fieldMap[column]);
+    setBackendOrderDirection(newDirection);
+  };
+
   useEffect(() => {
     fetchComposers();
-  }, [debouncedSearch, currentPage, birthYearRange, selectedInstrumentation, selectedCountry]);
+  }, [debouncedSearch, currentPage, birthYearRange, selectedInstrumentation, selectedCountry, backendOrderField, backendOrderDirection]);
 
   const fetchComposers = async () => {
-    setLoading(true);
+    // Use sortLoading for sorting operations to keep table visible
+    if (sortColumn) {
+      setSortLoading(true);
+    } else {
+      setLoading(true);
+    }
+    
     setError(null);
     
     try {
@@ -67,8 +93,10 @@ export default function ComposerListPage() {
       const params: any = {
         page: currentPage,
         page_size: pageSize,
-        ordering: 'last_name,first_name',
       };
+      
+      // Apply backend ordering
+      params.ordering = backendOrderDirection === 'asc' ? backendOrderField : `-${backendOrderField}`;
       
       // Add search query if present
       if (debouncedSearch) {
@@ -101,43 +129,11 @@ export default function ComposerListPage() {
       setError('Failed to load composers. Please try again.');
     } finally {
       setLoading(false);
+      setSortLoading(false);
     }
   };
 
-  // Apply sorting to displayed composers (backend already filters)
-  const sortedComposers = useMemo(() => {
-    if (!sortColumn) return composers;
-    
-    const sorted = [...composers].sort((a, b) => {
-      let aVal: any;
-      let bVal: any;
-      
-      switch (sortColumn) {
-        case 'name':
-          aVal = a.full_name.toLowerCase();
-          bVal = b.full_name.toLowerCase();
-          break;
-        case 'country':
-          aVal = a.country_name?.toLowerCase() || '';
-          bVal = b.country_name?.toLowerCase() || '';
-          break;
-        case 'birth_year':
-          aVal = a.birth_year || 9999;
-          bVal = b.birth_year || 9999;
-          break;
-        case 'work_count':
-          aVal = a.work_count;
-          bVal = b.work_count;
-          break;
-      }
-      
-      if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
-      if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
-      return 0;
-    });
-    
-    return sorted;
-  }, [composers, sortColumn, sortDirection]);
+  // All sorting handled by backend for consistent UX with loading overlay
 
   const loadComposerWorks = async (composerId: number): Promise<Work[]> => {
     try {
@@ -199,38 +195,55 @@ export default function ComposerListPage() {
       {/* Composers List */}
       {!error && !loading && (
         <>
-          <div className="composers-table-container">
+          <div className="composers-table-container" style={{ position: 'relative' }}>
+            {sortLoading && (
+              <div style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 10,
+                pointerEvents: 'none'
+              }}>
+                <div className="spinner" style={{ width: '24px', height: '24px' }}></div>
+              </div>
+            )}
             <table className="composers-table">
               <thead>
                 <tr>
                   <th 
                     className="sortable"
-                    onClick={() => handleSort('name')}
+                    onClick={() => handleColumnSort('name')}
                   >
                     Name {sortColumn === 'name' && (sortDirection === 'asc' ? '↑' : '↓')}
                   </th>
                   <th 
                     className="sortable"
-                    onClick={() => handleSort('country')}
+                    onClick={() => handleColumnSort('country')}
                   >
                     Country {sortColumn === 'country' && (sortDirection === 'asc' ? '↑' : '↓')}
                   </th>
                   <th 
                     className="sortable align-center years-column"
-                    onClick={() => handleSort('birth_year')}
+                    onClick={() => handleColumnSort('birth_year')}
                   >
                     Years {sortColumn === 'birth_year' && (sortDirection === 'asc' ? '↑' : '↓')}
                   </th>
                   <th 
                     className="sortable align-center works-column"
-                    onClick={() => handleSort('work_count')}
+                    onClick={() => handleColumnSort('work_count')}
                   >
                     Works {sortColumn === 'work_count' && (sortDirection === 'asc' ? '↑' : '↓')}
                   </th>
                 </tr>
               </thead>
               <tbody>
-                {sortedComposers.map((composer) => (
+                {composers.map((composer) => (
                   <ExpandableComposerRow
                     key={composer.id}
                     composer={composer}

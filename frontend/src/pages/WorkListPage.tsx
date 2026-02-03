@@ -6,7 +6,6 @@ import { useInstrumentations } from '../hooks/useInstrumentations';
 import { useCountries } from '../hooks/useCountries';
 import { useSort } from '../hooks/useSort';
 import { useFilters } from '../hooks/useFilters';
-import { stripLeadingSymbols } from '../lib/fuzzySearch';
 import DataTable, { Column } from '../components/ui/DataTable';
 import Pagination from '../components/ui/Pagination';
 import SearchBar from '../components/ui/SearchBar';
@@ -31,11 +30,14 @@ interface Work {
 export default function WorkListPage() {
   const [works, setWorks] = useState<Work[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sortLoading, setSortLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-  const { sortColumn, sortDirection, handleSort } = useSort<'title' | 'composer' | 'instrumentation'>();
+  const [backendOrderField, setBackendOrderField] = useState<string>('title_sort_key'); // Track backend ordering
+  const [backendOrderDirection, setBackendOrderDirection] = useState<'asc' | 'desc'>('asc');
+  const { sortColumn, sortDirection, handleSort } = useSort<'title' | 'composer' | 'instrumentation'>('title');
   const {
     yearRange: compositionYearRange,
     setYearRange: setCompositionYearRange,
@@ -51,44 +53,29 @@ export default function WorkListPage() {
   
   const pageSize = 200;
 
-  // Apply sorting to displayed works
-  const sortedWorks = useMemo(() => {
-    if (!sortColumn) return works;
+  // All sorting handled by backend for consistent UX with loading overlay
+
+  // Unified sort handler for all columns
+  const handleColumnSort = (column: 'title' | 'composer' | 'instrumentation') => {
+    handleSort(column);
+    const newDirection = sortColumn === column && sortDirection === 'asc' ? 'desc' : 'asc';
     
-    const sorted = [...works].sort((a, b) => {
-      let aVal: string;
-      let bVal: string;
-      
-      switch (sortColumn) {
-        case 'title':
-          aVal = stripLeadingSymbols(a.title.toLowerCase());
-          bVal = stripLeadingSymbols(b.title.toLowerCase());
-          break;
-        case 'composer':
-          aVal = a.composer?.full_name.toLowerCase() || '';
-          bVal = b.composer?.full_name.toLowerCase() || '';
-          break;
-        case 'instrumentation':
-          aVal = a.instrumentation_category?.name.toLowerCase() || '';
-          bVal = b.instrumentation_category?.name.toLowerCase() || '';
-          break;
-        default:
-          return 0;
-      }
-      
-      if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
-      if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
-      return 0;
-    });
+    // Map column to backend field
+    const fieldMap = {
+      title: 'title_sort_key',
+      composer: 'composer__full_name',
+      instrumentation: 'instrumentation_category__name'
+    };
     
-    return sorted;
-  }, [works, sortColumn, sortDirection]);
+    setBackendOrderField(fieldMap[column]);
+    setBackendOrderDirection(newDirection);
+  };
 
   const columns: Column<Work>[] = [
     {
       header: (
         <span 
-          onClick={() => handleSort('title')} 
+          onClick={() => handleColumnSort('title')} 
           className="sort-header"
         >
           Work Title {sortColumn === 'title' && (sortDirection === 'asc' ? '↑' : '↓')}
@@ -103,7 +90,7 @@ export default function WorkListPage() {
     {
       header: (
         <span 
-          onClick={() => handleSort('composer')} 
+          onClick={() => handleColumnSort('composer')} 
           className="sort-header"
         >
           Composer {sortColumn === 'composer' && (sortDirection === 'asc' ? '↑' : '↓')}
@@ -121,7 +108,7 @@ export default function WorkListPage() {
     {
       header: (
         <span 
-          onClick={() => handleSort('instrumentation')} 
+          onClick={() => handleColumnSort('instrumentation')} 
           className="sort-header"
         >
           Instrumentation {sortColumn === 'instrumentation' && (sortDirection === 'asc' ? '↑' : '↓')}
@@ -132,7 +119,16 @@ export default function WorkListPage() {
   ];
 
   const fetchWorks = useCallback(async () => {
-    setLoading(true);
+    // Use sortLoading for all sorting operations to keep table visible
+    // Only use main loading on initial mount or page change
+    const isSortOperation = currentPage === 1 && !loading;
+    
+    if (isSortOperation || sortColumn) {
+      setSortLoading(true);
+    } else {
+      setLoading(true);
+    }
+    
     setError(null);
     
     try {
@@ -163,6 +159,9 @@ export default function WorkListPage() {
         params.composition_year_max = compositionYearRange[1];
       }
 
+      // Apply backend ordering for all columns with consistent loading overlay
+      params.ordering = backendOrderDirection === 'asc' ? backendOrderField : `-${backendOrderField}`;
+
       const response = await api.get('/works/', { params });
       setWorks(response.data.results || response.data);
       setTotalCount(response.data.count || response.data.length);
@@ -171,8 +170,9 @@ export default function WorkListPage() {
       setError('Failed to load works. Please try again.');
     } finally {
       setLoading(false);
+      setSortLoading(false);
     }
-  }, [currentPage, pageSize, debouncedSearch, selectedInstrumentation, selectedCountry, compositionYearRange]);
+  }, [currentPage, pageSize, debouncedSearch, selectedInstrumentation, selectedCountry, compositionYearRange, backendOrderField, backendOrderDirection, sortColumn, loading]);
 
   useEffect(() => {
     fetchWorks();
@@ -228,13 +228,32 @@ export default function WorkListPage() {
       {/* Works List */}
       {!error && (
         <>
-          <DataTable
-            data={sortedWorks}
-            columns={columns}
-            getRowKey={(work) => work.id}
-            loading={loading}
-            emptyMessage="No works found. Try adjusting your search."
-          />
+          <div style={{ position: 'relative' }}>
+            {sortLoading && (
+              <div style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 10,
+                pointerEvents: 'none'
+              }}>
+                <div className="spinner" style={{ width: '24px', height: '24px' }}></div>
+              </div>
+            )}
+            <DataTable
+              data={works}
+              columns={columns}
+              getRowKey={(work) => work.id}
+              loading={loading}
+              emptyMessage="No works found. Try adjusting your search."
+            />
+          </div>
 
           {!loading && works.length > 0 && (
             <Pagination
