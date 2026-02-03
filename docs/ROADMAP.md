@@ -10,9 +10,9 @@ A public, searchable classical guitar database built to preserve and share class
 
 - **Frontend**: TypeScript + React (GitHub Pages)
 - **Backend**: Python + Django + Django REST Framework
-- **Database**: MySQL
+- **Database**: PostgreSQL (Supabase)
 - **Admin**: Django Admin with custom permissions
-- **Hosting**: AWS Lightsail (Django + MySQL) behind Nginx + HTTPS
+- **Hosting**: Django on cloud platform + PostgreSQL (Supabase) + HTTPS
 
 ---
 
@@ -26,7 +26,7 @@ A public, searchable classical guitar database built to preserve and share class
 
 ### 1.2 Database Schema Design
 - [x] Analyze Sheerpluck and IMSLP data structures
-- [x] Design normalized MySQL schema (composers, works, arrangements, editions, etc.)
+- [x] Design normalized database schema (composers, works, arrangements, editions, etc.)
 - [x] Define relationships and indexes
 - [ ] Create ER diagram
 - [x] Plan data normalization rules (name variants, dates, etc.)
@@ -101,7 +101,7 @@ A public, searchable classical guitar database built to preserve and share class
 - [x] Create serializers for all models
 - [x] Implement viewsets and endpoints
 - [x] Add filtering (django-filter)
-- [x] Implement full-text search (MySQL or separate engine)
+- [x] Implement full-text search (PostgreSQL pg_trgm fuzzy search)
 - [x] Add pagination
 - [x] Implement CORS for GitHub Pages
 - [x] Create API documentation (drf-spectacular/Swagger)
@@ -175,7 +175,7 @@ A public, searchable classical guitar database built to preserve and share class
 
 ### 5.1 AWS Lightsail Setup
 - [ ] Provision Lightsail instance
-- [ ] Install and configure MySQL
+- [x] Install and configure PostgreSQL (using Supabase)
 - [ ] Install Python and dependencies
 - [ ] Set up virtual environment
 - [ ] Clone Django repository

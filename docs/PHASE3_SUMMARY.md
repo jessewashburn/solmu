@@ -4,7 +4,7 @@
 
 ### Phase 3.1: Django Project Setup ✅
 - Virtual environment with Python 3.12.6
-- Django 6.0.1 + REST Framework + MySQL + CORS + API docs
+- Django 6.0.1 + REST Framework + PostgreSQL (Supabase) + CORS + API docs
 - Configured settings with environment variables
 - Project structure created
 

@@ -85,19 +85,29 @@ WSGI_APPLICATION = 'cgmd_backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-# Use SQLite for development/testing (comment out for MySQL)
+# PostgreSQL configuration (Supabase)
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('DB_NAME', 'postgres'),
+        'USER': os.getenv('DB_USER', 'postgres'),
+        'PASSWORD': os.getenv('DB_PASSWORD', ''),
+        'HOST': os.getenv('DB_HOST', 'db.bdnyxtqjybodniedgfg.supabase.co'),
+        'PORT': os.getenv('DB_PORT', '5432'),
+        'CONN_MAX_AGE': 600,  # Keep connections alive for 10 minutes
+        'OPTIONS': {
+            'connect_timeout': 10,
+        }
     }
 }
 
-# MySQL configuration (uncomment when MySQL is set up)
+# For local SQLite testing (comment out PostgreSQL above if using this)
 # DATABASES = {
 #     'default': {
-#         'ENGINE': 'django.db.backends.mysql',
-#         'NAME': os.getenv('DB_NAME', 'cgmd'),
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
 #         'USER': os.getenv('DB_USER', 'root'),
 #         'PASSWORD': os.getenv('DB_PASSWORD', ''),
 #         'HOST': os.getenv('DB_HOST', 'localhost'),

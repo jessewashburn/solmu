@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q, Count, Value
 from django.db.models.functions import Length, Replace, Lower
+from django.contrib.postgres.search import TrigramSimilarity
 from .models import (
     Country, InstrumentationCategory, DataSource,
     Composer, Work, Tag
@@ -18,6 +19,51 @@ from .serializers import (
     WorkListSerializer, WorkDetailSerializer, TagSerializer,
     WorkSearchSerializer
 )
+
+
+class TrigramSearchFilter(filters.SearchFilter):
+    """
+    PostgreSQL trigram fuzzy search with fallback to standard search.
+    - PostgreSQL: Fuzzy matching (handles typos like "Taregas" -> "Tárrega")
+    - SQLite/MySQL: Standard ILIKE search (exact substring matching)
+    """
+    def filter_queryset(self, request, queryset, view):
+        from django.db import connection
+        
+        search_param = request.query_params.get(self.search_param, '')
+        if not search_param:
+            return queryset
+        
+        # Fall back to standard search on non-PostgreSQL databases
+        if connection.vendor != 'postgresql':
+            return super().filter_queryset(request, queryset, view)
+        
+        # PostgreSQL trigram similarity search
+        similarity_threshold = 0.3
+        search_fields = getattr(view, 'search_fields', [])
+        
+        if not search_fields:
+            return queryset
+        
+        q_objects = Q()
+        for search_field in search_fields:
+            field = search_field.lstrip('^=@')
+            annotation_name = f'{field.replace("__", "_")}_similarity'
+            queryset = queryset.annotate(
+                **{annotation_name: TrigramSimilarity(field, search_param)}
+            )
+            q_objects |= Q(**{f'{annotation_name}__gt': similarity_threshold})
+        
+        if q_objects:
+            similarity_fields = [
+                f'{field.lstrip("^=@").replace("__", "_")}_similarity' 
+                for field in search_fields
+            ]
+            queryset = queryset.filter(q_objects)
+            if similarity_fields:
+                queryset = queryset.order_by(*[f'-{field}' for field in similarity_fields])
+        
+        return queryset
 
 
 class CountryViewSet(viewsets.ReadOnlyModelViewSet):
@@ -162,33 +208,21 @@ class ComposerViewSet(viewsets.ReadOnlyModelViewSet):
     
     list: Get all composers (lightweight)
     retrieve: Get detailed composer information
-    search: Full-text search composers
+    search: Full-text search composers (uses PostgreSQL trigram similarity for fuzzy matching)
     by_period: Filter composers by period
     by_country: Filter composers by country
     """
-    queryset = Composer.objects.select_related('country', 'data_source').all()
-    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    queryset = Composer.objects.select_related('country', 'data_source').annotate(
+        work_count=Count('works', filter=Q(works__is_public=True))
+    ).all()
+    filter_backends = [DjangoFilterBackend, TrigramSearchFilter, filters.OrderingFilter]
+    search_fields = ['full_name', 'last_name', 'first_name', 'name_normalized']
     ordering_fields = ['last_name', 'birth_year', 'death_year']
     ordering = ['last_name', 'first_name']
     filterset_fields = ['period', 'country', 'is_living', 'is_verified']
     
     def get_queryset(self):
         queryset = super().get_queryset()
-        
-        # Implement fuzzy search using the normalized name field
-        search_query = self.request.query_params.get('search')
-        if search_query:
-            # Normalize the search query
-            import unicodedata
-            normalized_query = unicodedata.normalize('NFKD', search_query).encode('ascii', 'ignore').decode('utf-8').lower()
-            
-            # Search in both regular fields and normalized field for fuzzy matching
-            queryset = queryset.filter(
-                Q(full_name__icontains=search_query) |
-                Q(last_name__icontains=search_query) |
-                Q(first_name__icontains=search_query) |
-                Q(name_normalized__icontains=normalized_query)
-            )
         
         # Filter by instrumentation (composers who have works with this instrumentation)
         # Handles variations like "solo" matching "Solo Guitar", "Guitar Solo", etc.
@@ -474,14 +508,14 @@ class WorkViewSet(viewsets.ReadOnlyModelViewSet):
     
     list: Get all works (lightweight)
     retrieve: Get detailed work information
-    search: Full-text search works
+    search: Full-text search works (uses PostgreSQL trigram similarity for fuzzy matching)
     by_instrumentation: Filter by instrumentation category
     by_difficulty: Filter by difficulty level
     """
     queryset = Work.objects.select_related(
-        'composer', 'instrumentation_category', 'data_source'
+        'composer', 'instrumentation_category'
     ).filter(is_public=True).distinct()
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filter_backends = [DjangoFilterBackend, TrigramSearchFilter, filters.OrderingFilter]
     search_fields = ['title', 'title_normalized', 'composer__full_name', 'opus_number']
     ordering_fields = ['title', 'composition_year', 'difficulty_level', 'view_count']
     ordering = ['title']
@@ -510,6 +544,10 @@ class WorkViewSet(viewsets.ReadOnlyModelViewSet):
     
     def get_queryset(self):
         queryset = super().get_queryset()
+        
+        # Add prefetch for detail views only (tags needed there)
+        if self.action == 'retrieve':
+            queryset = queryset.prefetch_related('work_tags__tag').select_related('data_source')
         
         # Get the requested ordering parameter
         ordering_param = self.request.query_params.get('ordering', 'title')

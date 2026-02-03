@@ -69,7 +69,7 @@ This provides:
 ### Backend
 - Django 6.0
 - Django REST Framework
-- SQLite database
+- PostgreSQL database (Supabase)
 - Python 3.10+
 
 ## Getting Started
@@ -93,6 +93,10 @@ python -m venv venv
 source venv/Scripts/activate     # Windows
 # source venv/bin/activate       # macOS/Linux
 pip install -r requirements.txt
+
+# Configure .env file with your PostgreSQL/Supabase credentials
+# DB_HOST, DB_NAME, DB_USER, DB_PASSWORD, DB_PORT
+
 python manage.py migrate
 ```
 

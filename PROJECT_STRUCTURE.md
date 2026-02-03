@@ -64,7 +64,7 @@ cgmd/
 │   └── SCHEMA_DOCUMENTATION.md  # Database schema documentation
 │
 ├── data/                 # Data files
-│   ├── database_schema.sql      # MySQL schema definition
+│   ├── database_schema.sql      # Database schema reference (legacy)
 │   └── sheerpluck_data.csv      # Source data (67K+ works)
 │
 ├── scripts/              # Utility scripts

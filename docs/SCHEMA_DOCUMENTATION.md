@@ -232,7 +232,7 @@ WHERE MATCH(search_text) AGAINST('romantic spanish guitar')
 ORDER BY score DESC;
 ```
 **Pros**: Relevance ranking, handles multiple terms, good performance  
-**Cons**: Limited fuzzy matching, MySQL FULLTEXT limitations
+**Cons**: Requires PostgreSQL pg_trgm extension
 
 #### 3. **Advanced Search** (Elasticsearch - Future Enhancement)
 For larger scale (100k+ works) or sophisticated features:
@@ -254,7 +254,7 @@ For larger scale (100k+ works) or sophisticated features:
 - `works`: `(title, subtitle)`, `(title, subtitle, description)`
 - `work_search_index`: `(search_text)`, `(composer_full_name, work_title)`
 
-**How MySQL FULLTEXT Works**:
+**How PostgreSQL Trigram Search Works**:
 - Inverted index of words → document IDs
 - Ignores common words (stopwords)
 - Ranks by relevance (TF-IDF based)
@@ -396,7 +396,7 @@ SELECT ... FROM works w JOIN composers c ...;
        return cached
    ```
 
-4. **Database Query Cache** (MySQL)
+4. **Database Query Cache** (PostgreSQL)
    ```sql
    SET GLOBAL query_cache_size = 67108864;  -- 64MB
    SET GLOBAL query_cache_type = 1;

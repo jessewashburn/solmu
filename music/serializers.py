@@ -44,7 +44,7 @@ class ComposerAliasSerializer(serializers.ModelSerializer):
 class ComposerListSerializer(serializers.ModelSerializer):
     """Lightweight serializer for composer lists"""
     country_name = serializers.CharField(source='country.name', read_only=True)
-    work_count = serializers.SerializerMethodField()
+    work_count = serializers.IntegerField(read_only=True)  # Use annotated field
     
     class Meta:
         model = Composer
@@ -52,9 +52,6 @@ class ComposerListSerializer(serializers.ModelSerializer):
             'id', 'full_name', 'birth_year', 'death_year', 
             'is_living', 'country_name', 'period', 'work_count'
         ]
-    
-    def get_work_count(self, obj):
-        return obj.works.filter(is_public=True).count()
 
 
 class ComposerDetailSerializer(serializers.ModelSerializer):
@@ -62,7 +59,7 @@ class ComposerDetailSerializer(serializers.ModelSerializer):
     country = CountrySerializer(read_only=True)
     data_source = DataSourceSerializer(read_only=True)
     aliases = ComposerAliasSerializer(many=True, read_only=True)
-    work_count = serializers.SerializerMethodField()
+    work_count = serializers.IntegerField(read_only=True)  # Use annotated field
     
     class Meta:
         model = Composer
@@ -74,24 +71,19 @@ class ComposerDetailSerializer(serializers.ModelSerializer):
             'data_source', 'is_verified', 'work_count', 'aliases',
             'created_at', 'updated_at'
         ]
-    
-    def get_work_count(self, obj):
-        return obj.works.filter(is_public=True).count()
 
 
 class WorkListSerializer(serializers.ModelSerializer):
-    """Lightweight serializer for work lists"""
+    """Lightweight serializer for work lists - optimized for speed"""
     composer = serializers.SerializerMethodField()
-    instrumentation_category = InstrumentationCategorySerializer(read_only=True)
-    tags = serializers.SerializerMethodField()
+    instrumentation_category = serializers.SerializerMethodField()
     
     class Meta:
         model = Work
         fields = [
             'id', 'title', 'composer', 'catalog_number',
             'composition_year', 'instrumentation_category', 'instrumentation_detail',
-            'duration_minutes', 'difficulty_level', 'movements',
-            'tags', 'created_at', 'updated_at'
+            'duration_minutes', 'difficulty_level'
         ]
     
     def get_composer(self, obj):
@@ -102,9 +94,13 @@ class WorkListSerializer(serializers.ModelSerializer):
             }
         return None
     
-    def get_tags(self, obj):
-        work_tags = obj.work_tags.select_related('tag')[:5]  # Limit to 5 tags for performance
-        return [{'id': wt.tag.id, 'name': wt.tag.name} for wt in work_tags]
+    def get_instrumentation_category(self, obj):
+        if obj.instrumentation_category:
+            return {
+                'id': obj.instrumentation_category.id,
+                'name': obj.instrumentation_category.name
+            }
+        return None
 
 
 class WorkDetailSerializer(serializers.ModelSerializer):
