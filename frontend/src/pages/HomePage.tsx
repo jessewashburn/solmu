@@ -4,16 +4,6 @@ import { workService, composerService } from '../lib';
 import { Work, Composer } from '../types';
 import './HomePage.css';
 
-// Generate a random work ID based on today's date
-const getDailyWorkId = (totalWorks: number): number => {
-  const today = new Date();
-  const seed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
-  // Use date as seed for consistent random selection per day
-  const random = Math.sin(seed) * 10000;
-  const normalized = random - Math.floor(random);
-  return Math.floor(normalized * totalWorks) + 1;
-};
-
 export default function HomePage() {
   const [highlightedWork, setHighlightedWork] = useState<Work | null>(null);
   const [composer, setComposer] = useState<Composer | null>(null);
@@ -37,17 +27,29 @@ export default function HomePage() {
       setTotalWorks(worksResponse.count);
       setTotalComposers(composersResponse.count);
       
-      // Get today's work ID
-      const workId = getDailyWorkId(worksResponse.count);
+      // Calculate max page (API uses 200 items per page by default)
+      const pageSize = 200;
+      const maxPage = Math.ceil(worksResponse.count / pageSize);
       
-      // Fetch the highlighted work
-      const work = await workService.getById(workId);
-      setHighlightedWork(work);
+      // Get a random page number based on today's date
+      const today = new Date();
+      const seed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
+      const random = Math.sin(seed) * 10000;
+      const normalized = random - Math.floor(random);
+      const randomPage = Math.floor(normalized * maxPage) + 1;
       
-      // Fetch full composer details if available
-      if (work.composer) {
-        const composerData = await composerService.getById(work.composer.id);
-        setComposer(composerData);
+      // Fetch a page of works and pick the first one
+      const randomWorksPage = await workService.getAll(randomPage, '');
+      const work = randomWorksPage.results[0];
+      
+      if (work) {
+        setHighlightedWork(work);
+        
+        // Fetch full composer details if available
+        if (work.composer) {
+          const composerData = await composerService.getById(work.composer.id);
+          setComposer(composerData);
+        }
       }
     } catch (error) {
       console.error('Error loading highlighted work:', error);
