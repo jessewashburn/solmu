@@ -33,7 +33,6 @@ function stripLeadingJunk(s: string): string {
   let i = 0;
   while (i < s.length) {
     const ch = s[i];
-    const code = ch.charCodeAt(0);
     
     // Check if letter or number using Unicode categories
     // Letters: Unicode category L* (Lu, Ll, Lt, Lm, Lo)

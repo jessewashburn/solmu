@@ -1,12 +1,6 @@
 import { useState } from 'react';
 import '../../../styles/shared/ListPage.css';
 
-interface YearRangeFilterProps {
-  label: string;
-  yearRange: [number, number];
-  onChange: (range: [number, number]) => void;
-}
-
 interface AdvancedFiltersProps {
   yearRangeLabel: string;
   yearRange: [number, number];
