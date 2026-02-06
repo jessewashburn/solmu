@@ -25,7 +25,7 @@ class Country(models.Model):
 
 class InstrumentationCategory(models.Model):
     """Categories for instrument groupings (Solo Guitar, Duo, Ensemble, etc.)"""
-    name = models.CharField(max_length=100, unique=True)
+    name = models.CharField(max_length=1000, unique=True)
     description = models.TextField(null=True, blank=True)
     sort_order = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -169,9 +169,9 @@ class Work(models.Model):
     composer = models.ForeignKey(Composer, on_delete=models.CASCADE, related_name='works')
     
     # Work Info
-    title = models.CharField(max_length=500)
-    title_normalized = models.CharField(max_length=500, help_text="Lowercase, accents removed for search")
-    title_sort_key = models.CharField(max_length=500, db_index=True, null=True, blank=True,
+    title = models.CharField(max_length=1000)
+    title_normalized = models.CharField(max_length=1000, help_text="Lowercase, accents removed for search")
+    title_sort_key = models.CharField(max_length=1000, db_index=True, null=True, blank=True,
                                      help_text="Normalized title for alphabetical sorting")
     subtitle = models.TextField(null=True, blank=True)
     opus_number = models.CharField(max_length=50, null=True, blank=True)
@@ -197,10 +197,10 @@ class Work(models.Model):
     key_signature = models.CharField(max_length=50, null=True, blank=True)
     
     # External Resources
-    imslp_url = models.URLField(max_length=500, null=True, blank=True)
-    sheerpluck_url = models.URLField(max_length=500, null=True, blank=True)
-    youtube_url = models.URLField(max_length=500, null=True, blank=True)
-    score_url = models.URLField(max_length=500, null=True, blank=True)
+    imslp_url = models.URLField(max_length=1000, null=True, blank=True)
+    sheerpluck_url = models.URLField(max_length=1000, null=True, blank=True)
+    youtube_url = models.URLField(max_length=1000, null=True, blank=True)
+    score_url = models.URLField(max_length=1000, null=True, blank=True)
     
     # Metadata
     data_source = models.ForeignKey(DataSource, on_delete=models.SET_NULL, null=True, blank=True)
@@ -303,8 +303,8 @@ class WorkSearchIndex(models.Model):
     composer_birth_year = models.SmallIntegerField(null=True, blank=True)
     composer_death_year = models.SmallIntegerField(null=True, blank=True)
     
-    work_title = models.CharField(max_length=500)
-    work_instrumentation = models.CharField(max_length=200, null=True, blank=True)
+    work_title = models.CharField(max_length=1000)
+    work_instrumentation = models.CharField(max_length=1000, null=True, blank=True)
     work_year = models.SmallIntegerField(null=True, blank=True)
     
     # Combined search field
