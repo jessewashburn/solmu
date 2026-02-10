@@ -10,8 +10,6 @@ export default function HomePage() {
   const [highlightedWork, setHighlightedWork] = useState<Work | null>(null);
   const [composer, setComposer] = useState<Composer | null>(null);
   const [loading, setLoading] = useState(true);
-  const [totalComposers, setTotalComposers] = useState<number>(0);
-  const [totalWorks, setTotalWorks] = useState<number>(0);
 
   useEffect(() => {
     loadHighlightedWork();
@@ -20,14 +18,8 @@ export default function HomePage() {
   const loadHighlightedWork = async () => {
     setLoading(true);
     try {
-      // Get total counts
-      const [worksResponse, composersResponse] = await Promise.all([
-        workService.getAll(1, ''),
-        composerService.getAll(1, '')
-      ]);
-      
-      setTotalWorks(worksResponse.count);
-      setTotalComposers(composersResponse.count);
+      // Get total count of works to calculate random page
+      const worksResponse = await workService.getAll(1, '');
       
       // Calculate max page (API uses 200 items per page by default)
       const pageSize = 200;
@@ -182,11 +174,9 @@ export default function HomePage() {
         <div className="browse-cards">
           <Link to="/composers" className="browse-card">
             <h3>Browse Composers</h3>
-            <p>Explore our complete collection of classical guitar composers</p>
           </Link>
           <Link to="/works" className="browse-card">
             <h3>Browse Works</h3>
-            <p>Discover thousands of guitar works from across history</p>
           </Link>
         </div>
       </section>
