@@ -1,0 +1,266 @@
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import axios from 'axios';
+import { useAuth } from '../contexts/AuthContext';
+import LoadingSpinner from '../components/ui/LoadingSpinner';
+import './AdminSuggestions.css';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
+interface Suggestion {
+  id: number;
+  suggestion_type: string;
+  suggestion_type_display: string;
+  status: string;
+  status_display: string;
+  title: string;
+  description: string;
+  submitter_name: string;
+  submitter_email: string;
+  admin_notes: string;
+  created_at: string;
+  reviewed_at: string | null;
+}
+
+export default function AdminSuggestions() {
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<string>('pending');
+  const [selectedSuggestion, setSelectedSuggestion] = useState<Suggestion | null>(null);
+  const [adminNotes, setAdminNotes] = useState('');
+  const { logout } = useAuth();
+
+  useEffect(() => {
+    fetchSuggestions();
+  }, [filter]);
+
+  const fetchSuggestions = async () => {
+    try {
+      setLoading(true);
+      const params = filter !== 'all' ? { status: filter } : {};
+      const response = await axios.get(`${API_URL}/api/suggestions/`, { params });
+      setSuggestions(response.data.results || response.data);
+    } catch (error: any) {
+      console.error('Failed to load suggestions:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleApprove = async (id: number) => {
+    try {
+      await axios.post(`${API_URL}/api/suggestions/${id}/approve/`);
+      fetchSuggestions();
+      setSelectedSuggestion(null);
+    } catch (error) {
+      alert('Failed to approve suggestion');
+    }
+  };
+
+  const handleReject = async (id: number) => {
+    try {
+      await axios.post(`${API_URL}/api/suggestions/${id}/reject/`, { admin_notes: adminNotes });
+      fetchSuggestions();
+      setSelectedSuggestion(null);
+      setAdminNotes('');
+    } catch (error) {
+      alert('Failed to reject suggestion');
+    }
+  };
+
+  const handleMarkMerged = async (id: number) => {
+    try {
+      await axios.post(`${API_URL}/api/suggestions/${id}/mark_merged/`);
+      fetchSuggestions();
+      setSelectedSuggestion(null);
+    } catch (error) {
+      alert('Failed to mark as merged');
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!confirm('Are you sure you want to delete this suggestion?')) return;
+    
+    try {
+      await axios.delete(`${API_URL}/api/suggestions/${id}/`);
+      fetchSuggestions();
+      setSelectedSuggestion(null);
+    } catch (error) {
+      alert('Failed to delete suggestion');
+    }
+  };
+
+  if (loading) return <LoadingSpinner />;
+
+  return (
+    <div className="admin-suggestions">
+      <header className="admin-header">
+        <div className="admin-header-content">
+          <h1>User Suggestions</h1>
+          <button onClick={logout} className="logout-button">
+            Logout
+          </button>
+        </div>
+      </header>
+
+      <div className="admin-content">
+        <div className="filters">
+          <button 
+            className={filter === 'pending' ? 'active' : ''}
+            onClick={() => setFilter('pending')}
+          >
+            Pending
+          </button>
+          <button 
+            className={filter === 'approved' ? 'active' : ''}
+            onClick={() => setFilter('approved')}
+          >
+            Approved
+          </button>
+          <button 
+            className={filter === 'merged' ? 'active' : ''}
+            onClick={() => setFilter('merged')}
+          >
+            Merged
+          </button>
+          <button 
+            className={filter === 'rejected' ? 'active' : ''}
+            onClick={() => setFilter('rejected')}
+          >
+            Rejected
+          </button>
+          <button 
+            className={filter === 'all' ? 'active' : ''}
+            onClick={() => setFilter('all')}
+          >
+            All
+          </button>
+        </div>
+
+        <div className="suggestions-layout">
+          <div className="suggestions-list">
+            {suggestions.length === 0 ? (
+              <div className="no-suggestions">
+                No {filter !== 'all' && filter} suggestions found.
+              </div>
+            ) : (
+              suggestions.map((suggestion) => (
+                <div
+                  key={suggestion.id}
+                  className={`suggestion-card ${selectedSuggestion?.id === suggestion.id ? 'selected' : ''}`}
+                  onClick={() => setSelectedSuggestion(suggestion)}
+                >
+                  <div className="suggestion-header">
+                    <span className={`badge badge-${suggestion.status}`}>
+                      {suggestion.status_display}
+                    </span>
+                    <span className="badge badge-type">
+                      {suggestion.suggestion_type_display}
+                    </span>
+                  </div>
+                  <h3>{suggestion.title}</h3>
+                  <p className="suggestion-preview">
+                    {suggestion.description.substring(0, 100)}
+                    {suggestion.description.length > 100 && '...'}
+                  </p>
+                  <div className="suggestion-meta">
+                    {suggestion.submitter_name && (
+                      <span>👤 {suggestion.submitter_name}</span>
+                    )}
+                    <span>📅 {new Date(suggestion.created_at).toLocaleDateString()}</span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {selectedSuggestion && (
+            <div className="suggestion-detail">
+              <div className="detail-header">
+                <h2>{selectedSuggestion.title}</h2>
+                <button 
+                  className="close-button"
+                  onClick={() => setSelectedSuggestion(null)}
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="detail-badges">
+                <span className={`badge badge-${selectedSuggestion.status}`}>
+                  {selectedSuggestion.status_display}
+                </span>
+                <span className="badge badge-type">
+                  {selectedSuggestion.suggestion_type_display}
+                </span>
+              </div>
+
+              <div className="detail-section">
+                <h4>Description</h4>
+                <p>{selectedSuggestion.description}</p>
+              </div>
+
+              {selectedSuggestion.submitter_name && (
+                <div className="detail-section">
+                  <h4>Submitted By</h4>
+                  <p>{selectedSuggestion.submitter_name}</p>
+                  {selectedSuggestion.submitter_email && (
+                    <p><a href={`mailto:${selectedSuggestion.submitter_email}`}>{selectedSuggestion.submitter_email}</a></p>
+                  )}
+                </div>
+              )}
+
+              {selectedSuggestion.admin_notes && (
+                <div className="detail-section">
+                  <h4>Admin Notes</h4>
+                  <p>{selectedSuggestion.admin_notes}</p>
+                </div>
+              )}
+
+              <div className="detail-actions">
+                {selectedSuggestion.status === 'pending' && (
+                  <>
+                    <button 
+                      className="btn-approve"
+                      onClick={() => handleApprove(selectedSuggestion.id)}
+                    >
+                      ✓ Approve
+                    </button>
+                    <button 
+                      className="btn-reject"
+                      onClick={() => {
+                        const notes = prompt('Add notes (optional):');
+                        if (notes !== null) {
+                          setAdminNotes(notes);
+                          handleReject(selectedSuggestion.id);
+                        }
+                      }}
+                    >
+                      ✗ Reject
+                    </button>
+                  </>
+                )}
+
+                {selectedSuggestion.status === 'approved' && (
+                  <button 
+                    className="btn-merge"
+                    onClick={() => handleMarkMerged(selectedSuggestion.id)}
+                  >
+                    ✓ Mark as Merged
+                  </button>
+                )}
+
+                <button 
+                  className="btn-delete"
+                  onClick={() => handleDelete(selectedSuggestion.id)}
+                >
+                  🗑 Delete
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

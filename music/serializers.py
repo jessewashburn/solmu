@@ -5,7 +5,7 @@ Serializers for the Classical Guitar Music Database API.
 from rest_framework import serializers
 from .models import (
     Country, InstrumentationCategory, DataSource,
-    Composer, ComposerAlias, Work, Tag, WorkTag
+    Composer, ComposerAlias, Work, Tag, WorkTag, UserSuggestion
 )
 
 
@@ -151,3 +151,21 @@ class WorkSearchSerializer(serializers.Serializer):
     instrumentation = serializers.CharField(allow_null=True)
     difficulty_level = serializers.IntegerField(allow_null=True)
     relevance_score = serializers.FloatField(required=False)
+
+
+class UserSuggestionSerializer(serializers.ModelSerializer):
+    """Serializer for user suggestions"""
+    suggestion_type_display = serializers.CharField(source='get_suggestion_type_display', read_only=True)
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    related_composer_name = serializers.CharField(source='related_composer.full_name', read_only=True, allow_null=True)
+    related_work_title = serializers.CharField(source='related_work.title', read_only=True, allow_null=True)
+    
+    class Meta:
+        model = UserSuggestion
+        fields = [
+            'id', 'suggestion_type', 'suggestion_type_display', 'status', 'status_display',
+            'submitter_name', 'submitter_email', 'title', 'description', 'suggested_data',
+            'related_composer', 'related_composer_name', 'related_work', 'related_work_title',
+            'admin_notes', 'reviewed_at', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at', 'reviewed_at']

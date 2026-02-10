@@ -1,6 +1,7 @@
 """
 Authentication views for admin users.
 """
+import os
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -9,15 +10,19 @@ from django.contrib.auth import authenticate, login, logout
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.utils.decorators import method_decorator
 
+# Admin credentials from environment variables
+ADMIN_USERNAME = os.getenv('ADMIN_USERNAME', 'admin')
+ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD')
+
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def login_view(request):
     """
-    Authenticate user and create session.
+    Authenticate user with admin credentials from environment variables.
     
     POST /api/auth/login/
-    Body: {"username": "admin", "password": "secret"}
+    Body: {"username": "admin", "password": "your-password"}
     """
     username = request.data.get('username')
     password = request.data.get('password')
@@ -28,18 +33,18 @@ def login_view(request):
             status=status.HTTP_400_BAD_REQUEST
         )
     
-    user = authenticate(request, username=username, password=password)
-    
-    if user is not None:
-        login(request, user)
+    # Check hardcoded credentials
+    if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+        # Create a session marker for hardcoded auth
+        request.session['is_admin'] = True
+        request.session['admin_username'] = ADMIN_USERNAME
+        
         return Response({
             'message': 'Login successful',
             'user': {
-                'id': user.id,
-                'username': user.username,
-                'email': user.email,
-                'is_staff': user.is_staff,
-                'is_superuser': user.is_superuser,
+                'username': ADMIN_USERNAME,
+                'is_staff': True,
+                'is_admin': True,
             }
         })
     else:
@@ -50,14 +55,14 @@ def login_view(request):
 
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def logout_view(request):
     """
     Logout current user and destroy session.
     
     POST /api/auth/logout/
     """
-    logout(request)
+    request.session.flush()
     return Response({'message': 'Logout successful'})
 
 
@@ -75,20 +80,21 @@ def get_csrf_token(request):
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def current_user(request):
     """
     Get current authenticated user info.
     
     GET /api/auth/user/
     """
-    user = request.user
-    return Response({
-        'id': user.id,
-        'username': user.username,
-        'email': user.email,
-        'is_staff': user.is_staff,
-        'is_superuser': user.is_superuser,
-        'first_name': user.first_name,
-        'last_name': user.last_name,
-    })
+    if request.session.get('is_admin'):
+        return Response({
+            'username': request.session.get('admin_username', 'admin'),
+            'is_staff': True,
+            'is_admin': True,
+        })
+    else:
+        return Response(
+            {'error': 'Not authenticated'},
+            status=status.HTTP_401_UNAUTHORIZED
+        )

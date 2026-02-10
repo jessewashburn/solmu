@@ -19,6 +19,8 @@ const PrivacyPage = lazy(() => import('./pages/PrivacyPage'));
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const AdminComposers = lazy(() => import('./pages/AdminComposers'));
+const AdminSuggestions = lazy(() => import('./pages/AdminSuggestions'));
+const SuggestionPage = lazy(() => import('./pages/SuggestionPage'));
 
 function App() {
   return (
@@ -36,6 +38,7 @@ function App() {
               <Route path="/search" element={<SearchPage />} />
               <Route path="/about" element={<AboutPage />} />
               <Route path="/privacy" element={<PrivacyPage />} />
+              <Route path="/suggest" element={<SuggestionPage />} />
               
               {/* Admin routes */}
               <Route path="/admin/login" element={<LoginPage />} />
@@ -43,7 +46,7 @@ function App() {
                 path="/admin" 
                 element={
                   <ProtectedRoute>
-                    <AdminDashboard />
+                    <AdminSuggestions />
                   </ProtectedRoute>
                 } 
               />

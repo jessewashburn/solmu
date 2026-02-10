@@ -331,3 +331,59 @@ class WorkSearchIndex(models.Model):
     def __str__(self):
         return f"Search Index: {self.work.title}"
 
+
+class UserSuggestion(models.Model):
+    """Store user suggestions for database changes/additions"""
+    STATUS_CHOICES = [
+        ('pending', 'Pending Review'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+        ('merged', 'Merged'),
+    ]
+    
+    SUGGESTION_TYPE_CHOICES = [
+        ('new_composer', 'New Composer'),
+        ('new_work', 'New Work'),
+        ('edit_composer', 'Edit Composer'),
+        ('edit_work', 'Edit Work'),
+        ('correction', 'Correction'),
+        ('other', 'Other'),
+    ]
+    
+    # Submission info
+    suggestion_type = models.CharField(max_length=20, choices=SUGGESTION_TYPE_CHOICES)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    
+    # User contact
+    submitter_name = models.CharField(max_length=100, blank=True)
+    submitter_email = models.EmailField(blank=True)
+    
+    # Suggestion content
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    suggested_data = models.JSONField(null=True, blank=True, help_text="Structured data for the suggestion")
+    
+    # References
+    related_composer = models.ForeignKey(Composer, on_delete=models.SET_NULL, null=True, blank=True)
+    related_work = models.ForeignKey(Work, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    # Admin notes
+    admin_notes = models.TextField(blank=True)
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'user_suggestions'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['status'], name='idx_suggestion_status'),
+            models.Index(fields=['created_at'], name='idx_suggestion_created'),
+            models.Index(fields=['suggestion_type'], name='idx_suggestion_type'),
+        ]
+    
+    def __str__(self):
+        return f"{self.get_suggestion_type_display()}: {self.title}"
+

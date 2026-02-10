@@ -2,7 +2,7 @@
 API views for the Classical Guitar Music Database.
 """
 
-from rest_framework import viewsets, filters, status
+from rest_framework import viewsets, filters, status, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
@@ -11,15 +11,15 @@ from django.db.models.functions import Length, Replace, Lower
 from django.contrib.postgres.search import TrigramSimilarity
 from .models import (
     Country, InstrumentationCategory, DataSource,
-    Composer, Work, Tag
+    Composer, Work, Tag, UserSuggestion
 )
 from .serializers import (
     CountrySerializer, InstrumentationCategorySerializer,
     DataSourceSerializer, ComposerListSerializer, ComposerDetailSerializer,
     WorkListSerializer, WorkDetailSerializer, TagSerializer,
-    WorkSearchSerializer
+    WorkSearchSerializer, UserSuggestionSerializer
 )
-from .permissions import IsAdminOrReadOnly
+from .permissions import IsAdminOrReadOnly, IsHardcodedAdmin
 
 
 class TrigramSearchFilter(filters.SearchFilter):
@@ -763,3 +763,67 @@ class StatsViewSet(viewsets.ViewSet):
             .annotate(count=Count('id'))
             .values_list('instrumentation_category__name', 'count')
         )
+
+
+class UserSuggestionViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint for user suggestions.
+    
+    Public users can create suggestions (POST).
+    Admin can view, update, and delete suggestions.
+    """
+    queryset = UserSuggestion.objects.all()
+    serializer_class = UserSuggestionSerializer
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filterset_fields = ['status', 'suggestion_type']
+    ordering_fields = ['created_at', 'status']
+    ordering = ['-created_at']
+    
+    def get_permissions(self):
+        """
+        Anyone can create suggestions.
+        Only admin can list, update, or delete.
+        """
+        if self.action == 'create':
+            return [permissions.AllowAny()]
+        return [IsHardcodedAdmin()]
+    
+    @action(detail=True, methods=['post'], permission_classes=[IsHardcodedAdmin])
+    def approve(self, request, pk=None):
+        """Approve a suggestion"""
+        from django.utils import timezone
+        
+        suggestion = self.get_object()
+        suggestion.status = 'approved'
+        suggestion.reviewed_at = timezone.now()
+        suggestion.save()
+        
+        serializer = self.get_serializer(suggestion)
+        return Response(serializer.data)
+    
+    @action(detail=True, methods=['post'], permission_classes=[IsHardcodedAdmin])
+    def reject(self, request, pk=None):
+        """Reject a suggestion"""
+        from django.utils import timezone
+        
+        suggestion = self.get_object()
+        suggestion.status = 'rejected'
+        suggestion.admin_notes = request.data.get('admin_notes', '')
+        suggestion.reviewed_at = timezone.now()
+        suggestion.save()
+        
+        serializer = self.get_serializer(suggestion)
+        return Response(serializer.data)
+    
+    @action(detail=True, methods=['post'], permission_classes=[IsHardcodedAdmin])
+    def mark_merged(self, request, pk=None):
+        """Mark a suggestion as merged into the database"""
+        from django.utils import timezone
+        
+        suggestion = self.get_object()
+        suggestion.status = 'merged'
+        suggestion.reviewed_at = timezone.now()
+        suggestion.save()
+        
+        serializer = self.get_serializer(suggestion)
+        return Response(serializer.data)

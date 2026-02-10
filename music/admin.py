@@ -1,7 +1,7 @@
 from django.contrib import admin
 from .models import (
     Country, InstrumentationCategory, DataSource, 
-    Composer, ComposerAlias, Work, Tag, WorkTag, WorkSearchIndex
+    Composer, ComposerAlias, Work, Tag, WorkTag, WorkSearchIndex, UserSuggestion
 )
 
 
@@ -132,4 +132,29 @@ class WorkSearchIndexAdmin(admin.ModelAdmin):
     
     def has_add_permission(self, request):
         return False  # Search index entries are created automatically
+
+
+@admin.register(UserSuggestion)
+class UserSuggestionAdmin(admin.ModelAdmin):
+    list_display = ['title', 'suggestion_type', 'status', 'submitter_email', 'created_at']
+    list_filter = ['status', 'suggestion_type', 'created_at']
+    search_fields = ['title', 'description', 'submitter_name', 'submitter_email']
+    readonly_fields = ['created_at', 'updated_at']
+    fieldsets = [
+        ('Suggestion Info', {
+            'fields': ['suggestion_type', 'status', 'title', 'description', 'suggested_data']
+        }),
+        ('Submitter', {
+            'fields': ['submitter_name', 'submitter_email']
+        }),
+        ('References', {
+            'fields': ['related_composer', 'related_work']
+        }),
+        ('Admin Review', {
+            'fields': ['admin_notes', 'reviewed_at']
+        }),
+        ('Timestamps', {
+            'fields': ['created_at', 'updated_at']
+        }),
+    ]
 
