@@ -9,6 +9,7 @@ from .views import (
     ComposerViewSet, WorkViewSet, TagViewSet, StatsViewSet
 )
 from .auth_views import login_view, logout_view, get_csrf_token, current_user
+from .suggestion_views import submit_suggestion
 
 # Create router and register viewsets
 router = DefaultRouter()
@@ -26,6 +27,9 @@ urlpatterns = [
     path('auth/logout/', logout_view, name='logout'),
     path('auth/csrf/', get_csrf_token, name='csrf'),
     path('auth/user/', current_user, name='current-user'),
+    
+    # Suggestion endpoint
+    path('suggestions/', submit_suggestion, name='submit-suggestion'),
     
     # API endpoints
     path('', include(router.urls)),

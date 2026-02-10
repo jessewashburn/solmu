@@ -1,0 +1,24 @@
+.suggestion-btn {
+  background: none;
+  border: none;
+  padding: 6px;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  border-radius: var(--border-radius-sm);
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.6;
+}
+
+.suggestion-btn:hover {
+  opacity: 1;
+  color: var(--color-header);
+  background: rgba(180, 161, 85, 0.1);
+  transform: scale(1.1);
+}
+
+.suggestion-btn svg {
+  display: block;
+}

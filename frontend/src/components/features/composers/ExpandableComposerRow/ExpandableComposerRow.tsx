@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import SuggestionButton from '../../SuggestionButton';
 import './ExpandableComposerRow.css';
 
 interface Work {
@@ -69,6 +70,9 @@ export default function ExpandableComposerRow({ composer, onLoadWorks }: Expanda
           >
             {composer.full_name}
           </Link>
+          <span onClick={(e) => e.stopPropagation()}>
+            <SuggestionButton itemType="composer" itemData={composer} />
+          </span>
         </td>
         <td className="align-left">
           {composer.country_name || '-'}
@@ -96,6 +100,7 @@ export default function ExpandableComposerRow({ composer, onLoadWorks }: Expanda
                       <span className="work-instrumentation">
                         {work.instrumentation_category?.name || '-'}
                       </span>
+                      <SuggestionButton itemType="work" itemData={work} />
                     </div>
                   ))}
                 </div>

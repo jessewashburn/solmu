@@ -10,6 +10,7 @@ import DataTable, { Column } from '../components/ui/DataTable';
 import Pagination from '../components/ui/Pagination';
 import SearchBar from '../components/ui/SearchBar';
 import AdvancedFilters from '../components/ui/AdvancedFilters';
+import SuggestionButton from '../components/features/SuggestionButton';
 import '../styles/shared/ListPage.css';
 
 interface Work {
@@ -82,9 +83,13 @@ export default function WorkListPage() {
         </span>
       ),
       accessor: (work) => (
-        <Link to={`/works/${work.id}`} state={{ from: 'works' }} className="link-primary">
-          {work.title}
-        </Link>
+        <>
+          <Link to={`/works/${work.id}`} state={{ from: 'works' }} className="link-primary">
+            {work.title}
+          </Link>
+          {' '}
+          <SuggestionButton itemType="work" itemData={work} />
+        </>
       ),
     },
     {
