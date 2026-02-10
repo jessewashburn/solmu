@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
+import { ComposerListItem } from '../types';
 import { useDebounce } from '../hooks/useDebounce';
 import { useInstrumentations } from '../hooks/useInstrumentations';
 import { useCountries } from '../hooks/useCountries';
@@ -11,7 +12,8 @@ import AdvancedFilters from '../components/ui/AdvancedFilters';
 import ExpandableComposerRow from '../components/features/composers/ExpandableComposerRow';
 import '../styles/shared/ListPage.css';
 
-interface Work {
+// Work type for composer's works list (minimal fields)
+interface ComposerWork {
   id: number;
   title: string;
   instrumentation_category: {
@@ -20,19 +22,8 @@ interface Work {
   } | null;
 }
 
-interface Composer {
-  id: number;
-  full_name: string;
-  birth_year: number | null;
-  death_year: number | null;
-  is_living: boolean;
-  period: string | null;
-  country_name: string | null;
-  work_count: number;
-}
-
 export default function ComposerListPage() {
-  const [composers, setComposers] = useState<Composer[]>([]);
+  const [composers, setComposers] = useState<ComposerListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortLoading, setSortLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -135,7 +126,7 @@ export default function ComposerListPage() {
 
   // All sorting handled by backend for consistent UX with loading overlay
 
-  const loadComposerWorks = async (composerId: number): Promise<Work[]> => {
+  const loadComposerWorks = async (composerId: number): Promise<ComposerWork[]> => {
     try {
       const response = await api.get(`/composers/${composerId}/works/`);
       return response.data.results || response.data;

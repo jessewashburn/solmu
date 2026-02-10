@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../lib/api';
+import { WorkListItem } from '../types';
 import { useDebounce } from '../hooks/useDebounce';
 import { useInstrumentations } from '../hooks/useInstrumentations';
 import { useCountries } from '../hooks/useCountries';
@@ -13,23 +14,8 @@ import AdvancedFilters from '../components/ui/AdvancedFilters';
 import SuggestionButton from '../components/features/SuggestionButton';
 import '../styles/shared/ListPage.css';
 
-interface Work {
-  id: number;
-  title: string;
-  composer: {
-    id: number;
-    full_name: string;
-  } | null;
-  instrumentation_category: {
-    id: number;
-    name: string;
-  } | null;
-  difficulty_level: number | null;
-  composition_year: number | null;
-}
-
 export default function WorkListPage() {
-  const [works, setWorks] = useState<Work[]>([]);
+  const [works, setWorks] = useState<WorkListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortLoading, setSortLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -72,7 +58,7 @@ export default function WorkListPage() {
     setBackendOrderDirection(newDirection);
   };
 
-  const columns: Column<Work>[] = [
+  const columns: Column<WorkListItem>[] = [
     {
       header: (
         <span 

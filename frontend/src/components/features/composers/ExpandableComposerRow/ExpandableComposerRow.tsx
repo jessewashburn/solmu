@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { ComposerListItem } from '../../../../types';
 import SuggestionButton from '../../SuggestionButton';
 import './ExpandableComposerRow.css';
 
-interface Work {
+// Minimal work type for composer's works list
+interface ComposerWork {
   id: number;
   title: string;
   instrumentation_category: {
@@ -12,25 +14,14 @@ interface Work {
   } | null;
 }
 
-interface Composer {
-  id: number;
-  full_name: string;
-  birth_year: number | null;
-  death_year: number | null;
-  is_living: boolean;
-  period: string | null;
-  country_name: string | null;
-  work_count: number;
-}
-
 interface ExpandableComposerRowProps {
-  composer: Composer;
-  onLoadWorks: (composerId: number) => Promise<Work[]>;
+  composer: ComposerListItem;
+  onLoadWorks: (composerId: number) => Promise<ComposerWork[]>;
 }
 
 export default function ExpandableComposerRow({ composer, onLoadWorks }: ExpandableComposerRowProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [works, setWorks] = useState<Work[]>([]);
+  const [works, setWorks] = useState<ComposerWork[]>([]);
   const [loadingWorks, setLoadingWorks] = useState(false);
 
   const handleToggle = async () => {

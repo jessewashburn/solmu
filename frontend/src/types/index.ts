@@ -6,12 +6,24 @@ export interface Composer {
   birth_year: number | null;
   death_year: number | null;
   is_living: boolean;
-  period: string;
+  period: string | null;
   country: Country | null;
   biography: string;
   work_count: number;
   created_at: string;
   updated_at: string;
+}
+
+// Lightweight type for composer lists (matches ComposerListSerializer)
+export interface ComposerListItem {
+  id: number;
+  full_name: string;
+  birth_year: number | null;
+  death_year: number | null;
+  is_living: boolean;
+  period: string | null;
+  country_name: string | null;
+  work_count: number;
 }
 
 export interface Work {
@@ -22,7 +34,7 @@ export interface Work {
   } | null;
   title: string;
   catalog_number: string | null;
-  year_composed: number | null;
+  composition_year: number | null;
   instrumentation_category: InstrumentationCategory | null;
   instrumentation_detail: string;
   duration_minutes: number | null;
@@ -35,6 +47,25 @@ export interface Work {
   tags: Tag[];
   created_at: string;
   updated_at: string;
+}
+
+// Lightweight type for work lists (matches WorkListSerializer)
+export interface WorkListItem {
+  id: number;
+  title: string;
+  composer: {
+    id: number;
+    full_name: string;
+  } | null;
+  catalog_number: string | null;
+  composition_year: number | null;
+  instrumentation_category: {
+    id: number;
+    name: string;
+  } | null;
+  instrumentation_detail: string;
+  duration_minutes: number | null;
+  difficulty_level: number | null;
 }
 
 export interface Country {

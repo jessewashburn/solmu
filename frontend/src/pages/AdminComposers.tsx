@@ -1,21 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import { Composer } from '../types';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import ErrorMessage from '../components/ui/ErrorMessage';
 import './AdminComposers.css';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
-
-interface Composer {
-  id: number;
-  full_name: string;
-  birth_year: number | null;
-  death_year: number | null;
-  period: string;
-  country: { name: string } | null;
-  work_count: number;
-}
 
 export default function AdminComposers() {
   const [composers, setComposers] = useState<Composer[]>([]);
