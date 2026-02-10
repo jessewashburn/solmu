@@ -2,7 +2,24 @@ import { useState } from 'react';
 import axios from 'axios';
 import './SuggestionForm.css';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+
+// Function to get CSRF token from cookies
+const getCSRFToken = () => {
+  const name = 'csrftoken';
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+};
 
 export default function SuggestionForm() {
   const [formData, setFormData] = useState({
@@ -23,7 +40,17 @@ export default function SuggestionForm() {
     setErrorMessage('');
 
     try {
-      await axios.post(`${API_URL}/api/suggestions/`, formData);
+      // Get CSRF token first
+      await axios.get(`${API_URL}/auth/csrf/`, { withCredentials: true });
+      const csrfToken = getCSRFToken();
+      
+      // Submit with CSRF token
+      await axios.post(`${API_URL}/suggestions/`, formData, {
+        withCredentials: true,
+        headers: {
+          'X-CSRFToken': csrfToken,
+        }
+      });
       setSubmitStatus('success');
       setFormData({
         suggestion_type: 'new_work',

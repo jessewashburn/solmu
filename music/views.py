@@ -788,6 +788,17 @@ class UserSuggestionViewSet(viewsets.ModelViewSet):
             return [permissions.AllowAny()]
         return [IsHardcodedAdmin()]
     
+    def create(self, request, *args, **kwargs):
+        """Override create to add debugging for validation errors."""
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            print("Validation errors:", serializer.errors)
+            print("Request data:", request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+    
     @action(detail=True, methods=['post'], permission_classes=[IsHardcodedAdmin])
     def approve(self, request, pk=None):
         """Approve a suggestion"""
