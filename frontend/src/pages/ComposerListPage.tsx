@@ -46,6 +46,9 @@ export default function ComposerListPage() {
   const countries = useCountries();
   const debouncedSearch = useDebounce(searchQuery, 150);
   
+  // Cache loaded works to prevent unnecessary API calls
+  const [loadedWorksCache, setLoadedWorksCache] = useState<Record<number, ComposerWork[]>>({});
+  
   const pageSize = 200;
 
   // Unified sort handler for all columns
@@ -63,6 +66,9 @@ export default function ComposerListPage() {
     
     setBackendOrderField(fieldMap[column]);
     setBackendOrderDirection(newDirection);
+    
+    // Reset to first page when sorting
+    setCurrentPage(1);
   };
 
   useEffect(() => {
@@ -86,8 +92,13 @@ export default function ComposerListPage() {
         page_size: pageSize,
       };
       
-      // Apply backend ordering
-      params.ordering = backendOrderDirection === 'asc' ? backendOrderField : `-${backendOrderField}`;
+      // Apply backend ordering - allow manual sorting to override search relevance
+      if (debouncedSearch && !sortColumn) {
+        // When searching without manual sort, use relevance (no ordering parameter)
+      } else {
+        // When browsing OR when user manually sorted during search, use column ordering
+        params.ordering = backendOrderDirection === 'asc' ? backendOrderField : `-${backendOrderField}`;
+      }
       
       // Add search query if present
       if (debouncedSearch) {
@@ -127,9 +138,23 @@ export default function ComposerListPage() {
   // All sorting handled by backend for consistent UX with loading overlay
 
   const loadComposerWorks = async (composerId: number): Promise<ComposerWork[]> => {
+    // Return cached works if already loaded
+    if (loadedWorksCache[composerId]) {
+      return loadedWorksCache[composerId];
+    }
+    
     try {
       const response = await api.get(`/composers/${composerId}/works/`);
-      return response.data.results || response.data;
+      // Handle both paginated and non-paginated responses
+      const works = response.data.results || response.data;
+      
+      // Cache the results
+      setLoadedWorksCache(prev => ({
+        ...prev,
+        [composerId]: works
+      }));
+      
+      return works;
     } catch (error) {
       console.error('Error loading composer works:', error);
       return [];

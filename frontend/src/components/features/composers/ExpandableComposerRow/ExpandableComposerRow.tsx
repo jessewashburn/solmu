@@ -25,6 +25,9 @@ export default function ExpandableComposerRow({ composer, onLoadWorks }: Expanda
   const [loadingWorks, setLoadingWorks] = useState(false);
 
   const handleToggle = async () => {
+    // Prevent multiple clicks while loading
+    if (loadingWorks) return;
+    
     if (!isExpanded && works.length === 0) {
       setLoadingWorks(true);
       try {
@@ -45,8 +48,8 @@ export default function ExpandableComposerRow({ composer, onLoadWorks }: Expanda
   return (
     <>
       <tr
-        className={`composer-row ${composer.work_count > 0 ? '' : 'non-clickable'}`}
-        onClick={composer.work_count > 0 ? handleToggle : undefined}
+        className={`composer-row ${composer.work_count > 0 ? '' : 'non-clickable'} ${loadingWorks ? 'loading' : ''}`}
+        onClick={composer.work_count > 0 && !loadingWorks ? handleToggle : undefined}
       >
         <td>
           {composer.work_count > 0 && (

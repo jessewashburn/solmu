@@ -11,6 +11,12 @@
   cursor: default;
 }
 
+.composer-row.loading {
+  cursor: wait;
+  background: #f5f5f5;
+  opacity: 0.8;
+}
+
 .composer-row:hover {
   background: #f9f9f9;
 }
@@ -47,6 +53,29 @@
 .loading-works {
   color: #666;
   font-style: italic;
+  text-align: center;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.loading-works::before {
+  content: '';
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #ccc;
+  border-top-color: var(--color-accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .works-list {

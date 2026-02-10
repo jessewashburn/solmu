@@ -56,6 +56,9 @@ export default function WorkListPage() {
     
     setBackendOrderField(fieldMap[column]);
     setBackendOrderDirection(newDirection);
+    
+    // Reset to first page when sorting
+    setCurrentPage(1);
   };
 
   const columns: Column<WorkListItem>[] = [
@@ -150,8 +153,13 @@ export default function WorkListPage() {
         params.composition_year_max = compositionYearRange[1];
       }
 
-      // Apply backend ordering for all columns with consistent loading overlay
-      params.ordering = backendOrderDirection === 'asc' ? backendOrderField : `-${backendOrderField}`;
+      // Apply backend ordering - allow manual sorting to override search relevance
+      if (debouncedSearch && !sortColumn) {
+        // When searching without manual sort, use relevance (no ordering parameter)
+      } else {
+        // When browsing OR when user manually sorted during search, use column ordering
+        params.ordering = backendOrderDirection === 'asc' ? backendOrderField : `-${backendOrderField}`;
+      }
 
       const response = await api.get('/works/', { params });
       setWorks(response.data.results || response.data);

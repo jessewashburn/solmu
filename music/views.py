@@ -37,10 +37,31 @@ class TrigramSearchFilter(filters.SearchFilter):
         
         # Fall back to standard search on non-PostgreSQL databases
         if connection.vendor != 'postgresql':
-            return super().filter_queryset(request, queryset, view)
+            # For non-PostgreSQL, still try to order by relevance using basic matching
+            queryset = super().filter_queryset(request, queryset, view)
+            # Try to order by exact matches first, then partial matches
+            if hasattr(view, 'search_fields') and view.search_fields:
+                # Create case for exact matches to rank higher
+                from django.db.models import Case, When, IntegerField
+                exact_match_conditions = []
+                partial_match_conditions = []
+                
+                for field in view.search_fields:
+                    clean_field = field.lstrip('^=@')
+                    exact_match_conditions.append(When(**{f"{clean_field}__iexact": search_param}, then=10))
+                    partial_match_conditions.append(When(**{f"{clean_field}__icontains": search_param}, then=5))
+                
+                relevance_score = Case(
+                    *exact_match_conditions,
+                    *partial_match_conditions,
+                    default=1,
+                    output_field=IntegerField()
+                )
+                queryset = queryset.annotate(relevance=relevance_score).order_by('-relevance')
+            return queryset
         
         # PostgreSQL trigram similarity search
-        similarity_threshold = 0.3
+        similarity_threshold = 0.1  # Lowered threshold for more inclusive results
         search_fields = getattr(view, 'search_fields', [])
         
         if not search_fields:
@@ -62,7 +83,12 @@ class TrigramSearchFilter(filters.SearchFilter):
             ]
             queryset = queryset.filter(q_objects)
             if similarity_fields:
-                queryset = queryset.order_by(*[f'-{field}' for field in similarity_fields])
+                # Order by the maximum similarity across all fields for best relevance
+                # This ensures "Sor, Fernando" ranks higher than "Fernando, Other" when searching "Fernando Sor"
+                from django.db.models.functions import Greatest
+                max_similarity_expr = Greatest(*similarity_fields)
+                queryset = queryset.annotate(max_similarity=max_similarity_expr)
+                queryset = queryset.order_by('-max_similarity')
         
         return queryset
 
@@ -230,7 +256,13 @@ class ComposerViewSet(viewsets.ModelViewSet):
         'country__name',
         'work_count'
     ]
-    ordering = ['last_name', 'first_name']
+    # Default ordering only when not searching - similarity search has its own ordering
+    def get_ordering(self):
+        """Override ordering to let search results use similarity ranking"""
+        search_param = self.request.query_params.get('search', '')
+        if search_param:
+            return None  # Let TrigramSearchFilter handle ordering
+        return ['last_name', 'first_name']  # Default alphabetical ordering
     filterset_fields = ['period', 'country', 'is_living', 'is_verified']
     
     def get_queryset(self):
@@ -473,11 +505,15 @@ class ComposerViewSet(viewsets.ModelViewSet):
             # Use direct filter on country fields - no joins needed, so no duplicates
             queryset = queryset.filter(query)
         
-        # Force ordering after all filters
-        # This ensures PostgreSQL maintains alphabetical order
-        ordering = self.request.query_params.get('ordering', 'last_name,first_name')
-        order_fields = [f.strip() for f in ordering.split(',')]
-        return queryset.order_by(*order_fields)
+        # Force ordering after all filters, but only when not searching
+        # When searching, let TrigramSearchFilter handle similarity-based ordering
+        search_param = self.request.query_params.get('search', '')
+        if not search_param:
+            ordering = self.request.query_params.get('ordering', 'last_name,first_name')
+            order_fields = [f.strip() for f in ordering.split(',')]
+            return queryset.order_by(*order_fields)
+        
+        return queryset
     
     def get_serializer_class(self):
         if self.action == 'retrieve':
@@ -519,10 +555,16 @@ class ComposerViewSet(viewsets.ModelViewSet):
         works = Work.objects.filter(
             composer=composer,
             is_public=True
-        ).select_related('instrumentation_category').distinct()
+        ).select_related('instrumentation_category').distinct().order_by('title_sort_key')
         
-        serializer = WorkListSerializer(works, many=True)
-        return Response(serializer.data)
+        # Add pagination for better performance
+        from rest_framework.pagination import PageNumberPagination
+        paginator = PageNumberPagination()
+        paginator.page_size = 50  # Limit to 50 works per page
+        paginated_works = paginator.paginate_queryset(works, request)
+        
+        serializer = WorkListSerializer(paginated_works, many=True)
+        return paginator.get_paginated_response(serializer.data)
 
 
 class WorkViewSet(viewsets.ModelViewSet):
@@ -571,11 +613,12 @@ class WorkViewSet(viewsets.ModelViewSet):
         if self.action == 'retrieve':
             queryset = queryset.prefetch_related('work_tags__tag').select_related('data_source')
         
-        # Get the requested ordering parameter
+        # Get the requested ordering parameter, but only apply when not searching
+        search_param = self.request.query_params.get('search', '')
         ordering_param = self.request.query_params.get('ordering', 'title')
         
-        # If sorting by title (default or explicit), use title_normalized for better performance
-        if ordering_param == 'title' or ordering_param == '-title':
+        # If sorting by title (default or explicit) and not searching, use title_normalized for better performance
+        if not search_param and (ordering_param == 'title' or ordering_param == '-title'):
             # Use title_normalized which has leading symbols stripped and is indexed
             queryset = queryset.order_by('title_normalized' if ordering_param == 'title' else '-title_normalized')
         
