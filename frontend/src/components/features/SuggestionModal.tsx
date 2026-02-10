@@ -22,7 +22,8 @@ export default function SuggestionModal({ isOpen, onClose, itemType, itemData }:
     setSubmitStatus('idle');
 
     try {
-      const response = await fetch('http://localhost:8000/api/suggestions/', {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+      const response = await fetch(`${API_URL}/suggestions/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
