@@ -81,7 +81,7 @@ Suggested Data:
             message=message,
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[settings.ADMIN_EMAIL],
-            fail_silently=False,
+            fail_silently=True,  # Don't crash if email fails in production
         )
         
         return Response({
@@ -90,7 +90,8 @@ Suggested Data:
         })
     except Exception as e:
         print(f"Error sending email: {e}")
-        return Response(
-            {'error': f'Failed to send suggestion: {str(e)}'},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
+        # Still return success - the suggestion was received even if email failed
+        return Response({
+            'message': 'Suggestion received (email notification failed)',
+            'status': 'received'
+        })
