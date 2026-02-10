@@ -15,6 +15,7 @@ const ComposerDetailPage = lazy(() => import('./pages/ComposerDetailPage'));
 const WorkDetailPage = lazy(() => import('./pages/WorkDetailPage'));
 const SearchPage = lazy(() => import('./pages/SearchPage'));
 const AboutPage = lazy(() => import('./pages/AboutPage'));
+const PrivacyPage = lazy(() => import('./pages/PrivacyPage'));
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const AdminComposers = lazy(() => import('./pages/AdminComposers'));
@@ -34,6 +35,7 @@ function App() {
               <Route path="/works/:id" element={<WorkDetailPage />} />
               <Route path="/search" element={<SearchPage />} />
               <Route path="/about" element={<AboutPage />} />
+              <Route path="/privacy" element={<PrivacyPage />} />
               
               {/* Admin routes */}
               <Route path="/admin/login" element={<LoginPage />} />
