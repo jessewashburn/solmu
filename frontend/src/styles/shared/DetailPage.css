@@ -14,17 +14,19 @@
 
 .detail-header h1 {
   font-size: 3rem;
-  margin-bottom: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
   color: var(--color-header);
   font-weight: 700;
   font-family: var(--font-primary);
+  display: block;
 }
 
 .detail-subtitle {
   font-size: 1.2rem;
   color: var(--color-text-secondary);
-  margin-bottom: var(--spacing-sm);
+  margin: 0;
   font-family: var(--font-primary);
+  display: block;
 }
 
 .detail-subtitle a {
@@ -37,6 +39,12 @@
 .detail-subtitle a:hover {
   color: var(--color-accent-hover);
   text-decoration: underline;
+}
+
+.composer-dates {
+  color: var(--color-text-muted);
+  font-size: 1rem;
+  font-weight: normal;
 }
 
 .detail-info-grid {

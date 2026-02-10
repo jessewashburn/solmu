@@ -31,6 +31,9 @@ export interface Work {
   composer: {
     id: number;
     full_name: string;
+    birth_year: number | null;
+    death_year: number | null;
+    is_living: boolean;
   } | null;
   title: string;
   catalog_number: string | null;

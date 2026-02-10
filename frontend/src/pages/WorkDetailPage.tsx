@@ -61,9 +61,16 @@ export default function WorkDetailPage() {
         <p className="detail-subtitle">
           by{' '}
           {work.composer ? (
-            <Link to={`/composers/${work.composer.id}`}>
-              {work.composer.full_name}
-            </Link>
+            <>
+              <Link to={`/composers/${work.composer.id}`}>
+                {work.composer.full_name}
+              </Link>
+              {(work.composer.birth_year || work.composer.death_year) && (
+                <span className="composer-dates">
+                  {' '}({work.composer.birth_year || '?'}–{work.composer.is_living ? 'present' : work.composer.death_year || '?'})
+                </span>
+              )}
+            </>
           ) : (
             <span>Unknown Composer</span>
           )}
