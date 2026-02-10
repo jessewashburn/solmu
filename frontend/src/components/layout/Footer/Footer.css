@@ -29,6 +29,7 @@
   text-decoration: none;
   transition: color 0.3s ease;
   font-size: 0.95rem;
+  font-weight: normal;
 }
 
 .footer-link-button {
@@ -37,11 +38,11 @@
   cursor: pointer;
   padding: 0;
   font-family: inherit;
-  font-weight: inherit;
+  font-size: inherit;
+  line-height: inherit;
 }
 
-.footer-link:hover,
-.footer-link-button:hover {
+.footer-link:hover {
   color: #fff;
   text-decoration: underline;
 }
