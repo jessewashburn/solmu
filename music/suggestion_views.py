@@ -12,6 +12,84 @@ import json
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+def submit_new_work_suggestion(request):
+    """
+    Handle submission of user suggestions for new works to add to database.
+    
+    POST /api/suggestions/new-work/
+    Body: {
+        "item_type": "new_work",
+        "suggested_data": {
+            "composer_name": "...",
+            "composer_birth_year": "...",
+            "composer_death_year": "...",
+            "composer_country": "...",
+            "work_title": "...",
+            "instrumentation_detail": "...",
+            "composition_year": "...",
+            "catalog_number": "..."
+        },
+        "comment": "optional additional info"
+    }
+    """
+    suggested_data = request.data.get('suggested_data', {})
+    comment = request.data.get('comment', '')
+    
+    # Validate required fields
+    if not suggested_data.get('composer_name') or not suggested_data.get('work_title'):
+        return Response(
+            {'error': 'composer_name and work_title are required'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    # Build email content
+    subject = f'New Work Suggestion: {suggested_data.get("work_title")} by {suggested_data.get("composer_name")}'
+    
+    message = f"""
+NEW WORK SUGGESTION
+
+COMPOSER:
+  Name: {suggested_data.get('composer_name', 'N/A')}
+  Birth Year: {suggested_data.get('composer_birth_year', 'N/A')}
+  Death Year: {suggested_data.get('composer_death_year', 'N/A')}
+  Country: {suggested_data.get('composer_country', 'N/A')}
+
+WORK:
+  Title: {suggested_data.get('work_title', 'N/A')}
+  Instrumentation: {suggested_data.get('instrumentation_detail', 'N/A')}
+  Year Composed: {suggested_data.get('composition_year', 'N/A')}
+  Catalog Number: {suggested_data.get('catalog_number', 'N/A')}
+
+{f'ADDITIONAL INFORMATION:{chr(10)}{comment}{chr(10)}' if comment else ''}
+
+---
+Full Data:
+{json.dumps(suggested_data, indent=2)}
+    """
+    
+    try:
+        send_mail(
+            subject=subject,
+            message=message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[settings.ADMIN_EMAIL],
+            fail_silently=True,
+        )
+        
+        return Response({
+            'message': 'Suggestion submitted successfully',
+            'status': 'sent'
+        })
+    except Exception as e:
+        print(f"Error sending email: {e}")
+        return Response({
+            'message': 'Suggestion received (email notification failed)',
+            'status': 'received'
+        })
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
 def submit_suggestion(request):
     """
     Handle submission of user suggestions for composers or works.
