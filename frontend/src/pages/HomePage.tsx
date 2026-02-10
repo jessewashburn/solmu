@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { workService, composerService } from '../lib';
 import { Work, Composer } from '../types';
+import SuggestionButton from '../components/features/SuggestionButton';
 import './HomePage.css';
 
 export default function HomePage() {
@@ -72,11 +73,14 @@ export default function HomePage() {
         ) : highlightedWork ? (
           <div className="highlighted-work-card">
             <div className="work-header">
-              <h3 className="work-title">
-                <Link to={`/works/${highlightedWork.id}`} className="work-title-link">
-                  {highlightedWork.title}
-                </Link>
-              </h3>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                <h3 className="work-title" style={{ flex: 1 }}>
+                  <Link to={`/works/${highlightedWork.id}`} className="work-title-link">
+                    {highlightedWork.title}
+                  </Link>
+                </h3>
+                <SuggestionButton itemType="work" itemData={highlightedWork} />
+              </div>
               <div className="work-composer">
                 <span className="composer-by">by </span>
                 {highlightedWork.composer ? (
