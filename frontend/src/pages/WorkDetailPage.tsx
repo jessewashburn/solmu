@@ -5,6 +5,7 @@ import { Work } from '../types';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import ErrorMessage from '../components/ui/ErrorMessage';
 import MetadataList from '../components/ui/MetadataList';
+import ExternalLinks from '../components/ui/ExternalLinks';
 import '../styles/shared/DetailPage.css';
 
 export default function WorkDetailPage() {
@@ -88,28 +89,13 @@ export default function WorkDetailPage() {
       {(work.imslp_url || work.sheerpluck_url || work.youtube_url || work.score_url) && (
         <section className="detail-section">
           <h2>External Links</h2>
-          <div className="external-links">
-            {work.imslp_url && (
-              <a href={work.imslp_url} target="_blank" rel="noopener noreferrer" className="external-link">
-                View on IMSLP →
-              </a>
-            )}
-            {work.sheerpluck_url && (
-              <a href={work.sheerpluck_url} target="_blank" rel="noopener noreferrer" className="external-link">
-                View on SheerPluck →
-              </a>
-            )}
-            {work.youtube_url && (
-              <a href={work.youtube_url} target="_blank" rel="noopener noreferrer" className="external-link">
-                Watch on YouTube →
-              </a>
-            )}
-            {work.score_url && (
-              <a href={work.score_url} target="_blank" rel="noopener noreferrer" className="external-link">
-                View Score →
-              </a>
-            )}
-          </div>
+          <ExternalLinks
+            imslpUrl={work.imslp_url}
+            sheerpluckUrl={work.sheerpluck_url}
+            youtubeUrl={work.youtube_url}
+            scoreUrl={work.score_url}
+            variant="detailed"
+          />
         </section>
       )}
     </div>

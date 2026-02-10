@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { workService, composerService } from '../lib';
 import { Work, Composer } from '../types';
 import SuggestionButton from '../components/features/SuggestionButton';
+import ExternalLinks from '../components/ui/ExternalLinks';
 import './HomePage.css';
 
 export default function HomePage() {
@@ -151,30 +152,13 @@ export default function HomePage() {
               </div>
             )}
 
-            {(highlightedWork.imslp_url || highlightedWork.sheerpluck_url || highlightedWork.youtube_url || highlightedWork.score_url) && (
-              <div className="work-links">
-                {highlightedWork.imslp_url && (
-                  <a href={highlightedWork.imslp_url} target="_blank" rel="noopener noreferrer" className="work-link">
-                    View on IMSLP →
-                  </a>
-                )}
-                {highlightedWork.sheerpluck_url && (
-                  <a href={highlightedWork.sheerpluck_url} target="_blank" rel="noopener noreferrer" className="work-link">
-                    View on SheerPluck →
-                  </a>
-                )}
-                {highlightedWork.youtube_url && (
-                  <a href={highlightedWork.youtube_url} target="_blank" rel="noopener noreferrer" className="work-link">
-                    View on YouTube →
-                  </a>
-                )}
-                {highlightedWork.score_url && (
-                  <a href={highlightedWork.score_url} target="_blank" rel="noopener noreferrer" className="work-link">
-                    View Score →
-                  </a>
-                )}
-              </div>
-            )}
+            <ExternalLinks
+              imslpUrl={highlightedWork.imslp_url}
+              sheerpluckUrl={highlightedWork.sheerpluck_url}
+              youtubeUrl={highlightedWork.youtube_url}
+              scoreUrl={highlightedWork.score_url}
+              variant="default"
+            />
           </div>
         ) : (
           <div className="highlighted-work-card error">
