@@ -174,17 +174,18 @@ export default function ComposerListPage() {
       />
 
       {/* Error State */}
-      {error && (
-        <div className="error-state">
-          <p>{error}</p>
-          <button className="btn btn-primary" onClick={fetchComposers}>
-            Retry
-          </button>
-        </div>
-      )}
+      <div className="content-area">
+        {error && (
+          <div className="error-state">
+            <p>{error}</p>
+            <button className="btn btn-primary" onClick={fetchComposers}>
+              Retry
+            </button>
+          </div>
+        )}
 
-      {/* Composers List */}
-      {!error && !loading && (
+        {/* Composers List */}
+        {!error && !loading && (
         <>
           <div className="composers-table-container" style={{ position: 'relative' }}>
             {sortLoading && (
@@ -255,21 +256,22 @@ export default function ComposerListPage() {
             />
           )}
         </>
-      )}
+        )}
 
-      {/* Loading State */}
-      {loading && (
-        <div className="loading-state">
-          <p>Loading composers...</p>
-        </div>
-      )}
+        {/* Loading State */}
+        {loading && (
+          <div className="loading-state">
+            <p>Loading composers...</p>
+          </div>
+        )}
 
-      {/* No Results */}
-      {!loading && !error && composers.length === 0 && (
-        <div className="empty-state">
-          <p>No composers found. Try adjusting your search.</p>
-        </div>
-      )}
+        {/* No Results */}
+        {!loading && !error && composers.length === 0 && (
+          <div className="empty-state">
+            <p>No composers found. Try adjusting your search.</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

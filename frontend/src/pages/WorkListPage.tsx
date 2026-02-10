@@ -207,17 +207,18 @@ export default function WorkListPage() {
       />
 
       {/* Error State */}
-      {error && (
-        <div className="error-state">
-          <p>{error}</p>
-          <button className="btn btn-primary" onClick={fetchWorks}>
-            Retry
-          </button>
-        </div>
-      )}
+      <div className="content-area">
+        {error && (
+          <div className="error-state">
+            <p>{error}</p>
+            <button className="btn btn-primary" onClick={fetchWorks}>
+              Retry
+            </button>
+          </div>
+        )}
 
-      {/* Works List */}
-      {!error && (
+        {/* Works Table */}
+        {!error && !loading && (
         <>
           <div style={{ position: 'relative' }}>
             {sortLoading && (
@@ -256,7 +257,22 @@ export default function WorkListPage() {
             />
           )}
         </>
-      )}
+        )}
+
+        {/* Loading State */}
+        {loading && (
+          <div className="loading-state">
+            <p>Loading works...</p>
+          </div>
+        )}
+
+        {/* No Results */}
+        {!loading && !error && works.length === 0 && (
+          <div className="empty-state">
+            <p>No works found. Try adjusting your search.</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

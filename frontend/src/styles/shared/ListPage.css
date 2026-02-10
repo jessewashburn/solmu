@@ -4,6 +4,27 @@
   padding: var(--spacing-lg);
   max-width: var(--max-width-wide);
   margin: 0 auto;
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* Ensure loading/empty/error states maintain proper width */
+.list-page .loading-state,
+.list-page .error-state, 
+.list-page .empty-state {
+  min-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Content area that maintains consistent width during loading */
+.list-page .content-area {
+  width: 100%;
+  min-height: 200px;
 }
 
 .page-tagline {
@@ -19,6 +40,13 @@
   max-width: var(--max-width-narrow);
   margin-left: auto;
   margin-right: auto;
+  width: 100%;
+  position: relative;
+}
+
+/* Ensure search container maintains width during loading */
+.list-page .search-container {
+  min-width: min(100%, var(--max-width-narrow));
 }
 
 .search-input {
