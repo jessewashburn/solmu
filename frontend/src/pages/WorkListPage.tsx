@@ -196,7 +196,7 @@ export default function WorkListPage() {
       />
 
       <AdvancedFilters
-        yearRangeLabel="Composition Year Range"
+        yearRangeLabel="Composer Dates Range"
         yearRange={compositionYearRange}
         onYearRangeChange={setCompositionYearRange}
         selectedInstrumentation={selectedInstrumentation}
