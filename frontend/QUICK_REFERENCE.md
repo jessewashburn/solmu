@@ -176,8 +176,8 @@ touch src/hooks/useNewHook.ts
 
 ## Key Features
 
-- 1,000+ classical guitar composers
-- 100,000+ guitar works
+- 15,000+ classical guitar composers
+- 74,000+ guitar works
 - Advanced filtering (year, country, instrumentation)
 - Fuzzy search with typo tolerance
 - Mobile-responsive design

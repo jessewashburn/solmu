@@ -175,7 +175,7 @@ export default function WorkListPage() {
     <div className="list-page">
       <header className="page-header">
         <h1>Works</h1>
-        <p>Browse {loading && totalCount === 0 ? '...' : (totalCount || 0).toLocaleString()} guitar works</p>
+        <p>Browse 74,000+ guitar works</p>
       </header>
 
       <SearchBar

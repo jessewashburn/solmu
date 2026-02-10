@@ -127,8 +127,8 @@ Access application at http://localhost:5173
 
 ## Key Features
 
-- Browse 1,000+ classical guitar composers
-- Search 100,000+ guitar works
+- Browse 15,000+ classical guitar composers
+- Search 74,000+ guitar works
 - Advanced filtering (year, country, instrumentation)
 - Fuzzy search with typo tolerance
 - Expandable composer rows
