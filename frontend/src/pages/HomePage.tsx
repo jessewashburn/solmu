@@ -177,7 +177,7 @@ export default function HomePage() {
       <section className="browse-section">
         <h2 className="section-title">Explore the Database</h2>
         <p className="section-description">
-          Our comprehensive database features {totalComposers.toLocaleString()} composers and {totalWorks.toLocaleString()} works, spanning centuries of guitar music from around the world.
+          Our comprehensive database features over 15,000 composers and 74,000 works, spanning centuries of guitar music from around the world.
         </p>
         <div className="browse-cards">
           <Link to="/composers" className="browse-card">
