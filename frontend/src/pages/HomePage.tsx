@@ -85,9 +85,16 @@ export default function HomePage() {
               <div className="work-composer">
                 <span className="composer-by">by </span>
                 {highlightedWork.composer ? (
-                  <Link to={`/composers/${highlightedWork.composer.id}`} className="composer-link">
-                    {highlightedWork.composer.full_name}
-                  </Link>
+                  <>
+                    <Link to={`/composers/${highlightedWork.composer.id}`} className="composer-link">
+                      {highlightedWork.composer.full_name}
+                    </Link>
+                    {(highlightedWork.composer.birth_year || highlightedWork.composer.death_year) && (
+                      <span className="composer-dates">
+                        {' '}({highlightedWork.composer.birth_year || '?'}–{highlightedWork.composer.is_living ? 'present' : highlightedWork.composer.death_year || '?'})
+                      </span>
+                    )}
+                  </>
                 ) : (
                   <span>Unknown Composer</span>
                 )}

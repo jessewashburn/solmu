@@ -37,6 +37,7 @@ export default function ComposerDetailPage() {
   if (loading) return <LoadingSpinner />;
   if (!composer) return <ErrorMessage title="Composer Not Found" message="The requested composer could not be found." />;
 
+  const hasDates = composer.birth_year || composer.death_year || composer.is_living;
   const birth = composer.birth_year || '?';
   const death = composer.death_year || (composer.is_living ? 'present' : '?');
 
@@ -52,9 +53,11 @@ export default function ComposerDetailPage() {
       
       <header className="detail-header">
         <h1>{composer.full_name}</h1>
-        <p className="detail-subtitle">
-          {birth} - {death}
-        </p>
+        {hasDates && (
+          <p className="detail-subtitle">
+            {birth} – {death}
+          </p>
+        )}
         
         <MetadataList items={metadataItems} />
 
