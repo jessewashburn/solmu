@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { lazy, Suspense } from 'react';
 import Navbar from './components/layout/Navbar';
+import Footer from './components/layout/Footer';
 import HomePage from './pages/HomePage';
 import LoadingSpinner from './components/ui/LoadingSpinner';
 import { AuthProvider } from './contexts/AuthContext';
@@ -54,6 +55,7 @@ function App() {
               />
             </Routes>
           </Suspense>
+          <Footer />
         </div>
       </BrowserRouter>
     </AuthProvider>

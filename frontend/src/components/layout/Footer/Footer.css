@@ -1,0 +1,14 @@
+.app-footer {
+  background-color: var(--color-header);
+  color: var(--color-light);
+  padding: 2rem 0;
+  margin-top: auto;
+  border-top: 2px solid var(--color-accent);
+}
+
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  min-height: 60px;
+}
