@@ -37,13 +37,19 @@
     - ✅ `frontend/src/components/features/composers/ExpandableComposerRow/ExpandableComposerRow.tsx`
     - ✅ `frontend/src/types/index.ts`
 
-## Phase 3: Component Extraction
+## Phase 3: Component Extraction ✅ COMPLETED
 **Priority: Medium | Effort: Medium | Impact: Reusability**
+**Completed: 2026-02-09 | Commit: f701cf5**
 
-- [ ] Extract `ExternalLinks` component
+- [x] Extract `ExternalLinks` component
   - Duplicate code in `HomePage.tsx` and `WorkDetailPage.tsx` for rendering IMSLP/YouTube/SheerPluck/Score links
   - **Why**: DRY principle, consistent styling
   - **Risk**: Low (UI component only)
+  - **Result**:
+    - Created `ExternalLinks` component with variant support ('default' | 'detailed')
+    - Removed 46 lines of duplicate code
+    - Maintained different styling for each context
+    - Consistent accessibility attributes (target="_blank" rel="noopener noreferrer")
   - **Pattern**: 
     ```tsx
     <ExternalLinks 
@@ -51,6 +57,7 @@
       sheerpluckUrl={work.sheerpluck_url}
       youtubeUrl={work.youtube_url}
       scoreUrl={work.score_url}
+      variant="default"
     />
     ```
 
