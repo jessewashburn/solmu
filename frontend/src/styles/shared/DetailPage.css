@@ -12,13 +12,26 @@
   border-bottom: 3px solid var(--color-accent);
 }
 
+.detail-title-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+}
+
+.detail-title-row .suggestion-btn {
+  margin-top: 0.5rem;
+  flex-shrink: 0;
+}
+
 .detail-header h1 {
   font-size: 3rem;
-  margin-bottom: var(--spacing-md);
+  margin: 0;
   color: var(--color-header);
   font-weight: 700;
   font-family: var(--font-primary);
   display: block;
+  flex: 1;
 }
 
 .detail-subtitle {

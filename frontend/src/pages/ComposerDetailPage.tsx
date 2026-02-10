@@ -5,6 +5,7 @@ import { Composer, Work } from '../types';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import ErrorMessage from '../components/ui/ErrorMessage';
 import MetadataList from '../components/ui/MetadataList';
+import SuggestionButton from '../components/features/SuggestionButton';
 import '../styles/shared/DetailPage.css';
 
 export default function ComposerDetailPage() {
@@ -52,7 +53,10 @@ export default function ComposerDetailPage() {
       <Link to="/composers" className="back-link">← Back to Composers</Link>
       
       <header className="detail-header">
-        <h1>{composer.full_name}</h1>
+        <div className="detail-title-row">
+          <h1>{composer.full_name}</h1>
+          <SuggestionButton itemType="composer" itemData={composer} />
+        </div>
         {hasDates && (
           <p className="detail-subtitle">
             {birth} – {death}

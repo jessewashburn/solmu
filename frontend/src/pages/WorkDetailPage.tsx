@@ -6,6 +6,7 @@ import LoadingSpinner from '../components/ui/LoadingSpinner';
 import ErrorMessage from '../components/ui/ErrorMessage';
 import MetadataList from '../components/ui/MetadataList';
 import ExternalLinks from '../components/ui/ExternalLinks';
+import SuggestionButton from '../components/features/SuggestionButton';
 import '../styles/shared/DetailPage.css';
 
 export default function WorkDetailPage() {
@@ -57,7 +58,10 @@ export default function WorkDetailPage() {
       ) : null}
       
       <header className="detail-header">
-        <h1>{work.title}</h1>
+        <div className="detail-title-row">
+          <h1>{work.title}</h1>
+          <SuggestionButton itemType="work" itemData={work} />
+        </div>
         <p className="detail-subtitle">
           by{' '}
           {work.composer ? (
