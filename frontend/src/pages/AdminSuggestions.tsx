@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
+import PageHeader from '../components/layout/PageHeader';
 import './AdminSuggestions.css';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
@@ -93,15 +94,12 @@ export default function AdminSuggestions() {
   if (loading) return <LoadingSpinner />;
 
   return (
-    <div className="admin-suggestions">
-      <header className="admin-header">
-        <div className="admin-header-content">
-          <h1>User Suggestions</h1>
-          <button onClick={logout} className="logout-button">
-            Logout
-          </button>
-        </div>
-      </header>
+    <div className="admin-suggestions page-container">
+      <PageHeader 
+        tagline="ADMIN PORTAL"
+        title="User Suggestions"
+        subtitle="Review and manage user submissions"
+      />
 
       <div className="admin-content">
         <div className="filters">
@@ -260,6 +258,12 @@ export default function AdminSuggestions() {
             </div>
           )}
         </div>
+      </div>
+      
+      <div className="logout-container">
+        <button onClick={logout} className="logout-button">
+          Logout
+        </button>
       </div>
     </div>
   );
