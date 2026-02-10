@@ -280,9 +280,9 @@ def get_instrumentation_variations() -> dict:
     """
     return {
         'Solo': ['Solo Guitar', 'Guitar Solo', 'solo'],
-        'Duo': ['Guitar Duo', 'Duo for Guitar', 'Two Guitars', 'duo'],
-        'Trio': ['Guitar Trio', 'Trio for Guitar', 'Three Guitars', 'trio'],
-        'Quartet': ['Guitar Quartet', 'Quartet for Guitar', 'Four Guitars', 'quartet'],
+        'Duo': ['Guitar Duo', 'Duo for Guitar', 'Two Guitars', '2 Guitars', '2 guitars', 'duo'],
+        'Trio': ['Guitar Trio', 'Trio for Guitar', 'Three Guitars', '3 Guitars', '3 guitars', 'trio'],
+        'Quartet': ['Guitar Quartet', 'Quartet for Guitar', 'Four Guitars', '4 Guitars', '4 guitars', 'quartet'],
         'Quintet': ['quintet'],
         'Sextet': ['sextet'],
         'Septet': ['septet'],
