@@ -25,9 +25,7 @@ def submit_new_work_suggestion(request):
             "composer_death_year": "...",
             "composer_country": "...",
             "work_title": "...",
-            "instrumentation_detail": "...",
-            "composition_year": "...",
-            "catalog_number": "..."
+            "instrumentation_detail": "..."
         },
         "comment": "optional additional info"
     }
@@ -57,8 +55,6 @@ COMPOSER:
 WORK:
   Title: {suggested_data.get('work_title', 'N/A')}
   Instrumentation: {suggested_data.get('instrumentation_detail', 'N/A')}
-  Year Composed: {suggested_data.get('composition_year', 'N/A')}
-  Catalog Number: {suggested_data.get('catalog_number', 'N/A')}
 
 {f'ADDITIONAL INFORMATION:{chr(10)}{comment}{chr(10)}' if comment else ''}
 

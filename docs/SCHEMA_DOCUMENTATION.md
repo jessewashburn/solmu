@@ -2,14 +2,11 @@
 
 ## Overview
 
-This schema is designed for a classical guitar music database with **~67,000 works** from the Sheerpluck dataset, with optimization for search performance and data quality management.
+This schema is designed for a classical guitar music database with **~67,000 works** from the Sheerpluck and IMSLP datasets, with optimization for search performance and data quality management.
 
 ---
 
 ## Data Analysis Summary
-
-### Source Data (sheerpluck_data.csv)
-- **Total Records**: 67,164 works
 - **Fields**: 
   - ID, Name (Composer), Birth Year, Death Year, Country, Work (Title), Instrumentation
   

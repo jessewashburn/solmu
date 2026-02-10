@@ -14,8 +14,6 @@ export default function SuggestNewWorkModal({ isOpen, onClose }: SuggestNewWorkM
     composer_country: '',
     work_title: '',
     instrumentation_detail: '',
-    composition_year: '',
-    catalog_number: '',
     comment: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -61,8 +59,6 @@ export default function SuggestNewWorkModal({ isOpen, onClose }: SuggestNewWorkM
             composer_country: '',
             work_title: '',
             instrumentation_detail: '',
-            composition_year: '',
-            catalog_number: '',
             comment: '',
           });
         }, 2000);
@@ -158,27 +154,6 @@ export default function SuggestNewWorkModal({ isOpen, onClose }: SuggestNewWorkM
                 onChange={(e) => handleChange('instrumentation_detail', e.target.value)}
                 placeholder="e.g., Solo Guitar, Guitar Duo"
               />
-            </div>
-
-            <div className="form-row">
-              <div className="form-group">
-                <label>Year Composed</label>
-                <input
-                  type="number"
-                  value={formData.composition_year}
-                  onChange={(e) => handleChange('composition_year', e.target.value)}
-                  placeholder="e.g., 2010"
-                />
-              </div>
-              <div className="form-group">
-                <label>Catalog Number</label>
-                <input
-                  type="text"
-                  value={formData.catalog_number}
-                  onChange={(e) => handleChange('catalog_number', e.target.value)}
-                  placeholder="e.g., Op. 12"
-                />
-              </div>
             </div>
           </div>
 
