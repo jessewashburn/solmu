@@ -1,5 +1,9 @@
 import SuggestionForm from '../components/suggestions/SuggestionForm';
 
 export default function SuggestionPage() {
-  return <SuggestionForm />;
+  return (
+    <div className="page-container-narrow">
+      <SuggestionForm />
+    </div>
+  );
 }

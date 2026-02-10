@@ -17,7 +17,6 @@ const SearchPage = lazy(() => import('./pages/SearchPage'));
 const AboutPage = lazy(() => import('./pages/AboutPage'));
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage'));
 const LoginPage = lazy(() => import('./pages/LoginPage'));
-const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const AdminComposers = lazy(() => import('./pages/AdminComposers'));
 const AdminSuggestions = lazy(() => import('./pages/AdminSuggestions'));
 const SuggestionPage = lazy(() => import('./pages/SuggestionPage'));
