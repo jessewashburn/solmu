@@ -95,14 +95,6 @@ export default function SuggestionModal({ isOpen, onClose, itemType, itemData }:
           onChange={(e) => handleChange('country_name', e.target.value)}
         />
       </div>
-      <div className="form-group">
-        <label>Period</label>
-        <input
-          type="text"
-          value={formData.period || ''}
-          onChange={(e) => handleChange('period', e.target.value)}
-        />
-      </div>
     </>
   );
 
