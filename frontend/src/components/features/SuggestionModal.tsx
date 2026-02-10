@@ -90,8 +90,8 @@ export default function SuggestionModal({ isOpen, onClose, itemType, itemData }:
         <label>Country</label>
         <input
           type="text"
-          value={formData.country?.name || ''}
-          onChange={(e) => handleChange('country', { name: e.target.value })}
+          value={formData.country_name || ''}
+          onChange={(e) => handleChange('country_name', e.target.value)}
         />
       </div>
       <div className="form-group">
