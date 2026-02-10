@@ -8,6 +8,7 @@ from .views import (
     CountryViewSet, InstrumentationCategoryViewSet, DataSourceViewSet,
     ComposerViewSet, WorkViewSet, TagViewSet, StatsViewSet
 )
+from .auth_views import login_view, logout_view, get_csrf_token, current_user
 
 # Create router and register viewsets
 router = DefaultRouter()
@@ -20,5 +21,12 @@ router.register(r'tags', TagViewSet, basename='tag')
 router.register(r'stats', StatsViewSet, basename='stats')
 
 urlpatterns = [
+    # Auth endpoints
+    path('auth/login/', login_view, name='login'),
+    path('auth/logout/', logout_view, name='logout'),
+    path('auth/csrf/', get_csrf_token, name='csrf'),
+    path('auth/user/', current_user, name='current-user'),
+    
+    # API endpoints
     path('', include(router.urls)),
 ]

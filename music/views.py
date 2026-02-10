@@ -19,6 +19,7 @@ from .serializers import (
     WorkListSerializer, WorkDetailSerializer, TagSerializer,
     WorkSearchSerializer
 )
+from .permissions import IsAdminOrReadOnly
 
 
 class TrigramSearchFilter(filters.SearchFilter):
@@ -202,12 +203,15 @@ class DataSourceViewSet(viewsets.ReadOnlyModelViewSet):
     ordering = ['name']
 
 
-class ComposerViewSet(viewsets.ReadOnlyModelViewSet):
+class ComposerViewSet(viewsets.ModelViewSet):
     """
     API endpoint for composers.
     
     list: Get all composers (lightweight)
     retrieve: Get detailed composer information
+    create: Create new composer (admin only)
+    update: Update composer (admin only)
+    destroy: Delete composer (admin only)
     search: Full-text search composers (uses PostgreSQL trigram similarity for fuzzy matching)
     by_period: Filter composers by period
     by_country: Filter composers by country
@@ -215,6 +219,7 @@ class ComposerViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Composer.objects.select_related('country', 'data_source').annotate(
         work_count=Count('works', filter=Q(works__is_public=True))
     )
+    permission_classes = [IsAdminOrReadOnly]
     filter_backends = [DjangoFilterBackend, TrigramSearchFilter, filters.OrderingFilter]
     search_fields = ['full_name', 'last_name', 'first_name', 'name_normalized']
     ordering_fields = [
@@ -520,12 +525,15 @@ class ComposerViewSet(viewsets.ReadOnlyModelViewSet):
         return Response(serializer.data)
 
 
-class WorkViewSet(viewsets.ReadOnlyModelViewSet):
+class WorkViewSet(viewsets.ModelViewSet):
     """
     API endpoint for musical works.
     
     list: Get all works (lightweight)
     retrieve: Get detailed work information
+    create: Create new work (admin only)
+    update: Update work (admin only)
+    destroy: Delete work (admin only)
     search: Full-text search works (uses PostgreSQL trigram similarity for fuzzy matching)
     by_instrumentation: Filter by instrumentation category
     by_difficulty: Filter by difficulty level
@@ -533,6 +541,7 @@ class WorkViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Work.objects.select_related(
         'composer', 'instrumentation_category'
     ).filter(is_public=True).order_by('title_sort_key').distinct()
+    permission_classes = [IsAdminOrReadOnly]
     filter_backends = [DjangoFilterBackend, TrigramSearchFilter, filters.OrderingFilter]
     search_fields = ['title', 'title_normalized', 'composer__full_name', 'opus_number']
     ordering_fields = [
