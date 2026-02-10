@@ -39,8 +39,9 @@ export default function ComposerDetailPage() {
   if (!composer) return <ErrorMessage title="Composer Not Found" message="The requested composer could not be found." />;
 
   const hasDates = composer.birth_year || composer.death_year || composer.is_living;
-  const birth = composer.birth_year || '?';
-  const death = composer.death_year || (composer.is_living ? 'present' : '?');
+  const dateDisplay = composer.is_living || !composer.death_year 
+    ? `b.${composer.birth_year || '?'}`
+    : `${composer.birth_year || '?'} – ${composer.death_year}`;
 
   const metadataItems = [
     composer.country && { label: 'Country', value: composer.country.name },
@@ -59,7 +60,7 @@ export default function ComposerDetailPage() {
         </div>
         {hasDates && (
           <p className="detail-subtitle">
-            {birth} – {death}
+            {dateDisplay}
           </p>
         )}
         

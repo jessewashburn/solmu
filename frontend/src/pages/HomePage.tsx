@@ -91,7 +91,7 @@ export default function HomePage() {
                     </Link>
                     {(highlightedWork.composer.birth_year || highlightedWork.composer.death_year) && (
                       <span className="composer-dates">
-                        {' '}({highlightedWork.composer.birth_year || '?'}–{highlightedWork.composer.is_living ? 'present' : highlightedWork.composer.death_year || '?'})
+                        {' '}({highlightedWork.composer.is_living || !highlightedWork.composer.death_year ? `b.${highlightedWork.composer.birth_year || '?'}` : `${highlightedWork.composer.birth_year || '?'}–${highlightedWork.composer.death_year}`})
                       </span>
                     )}
                   </>
@@ -107,7 +107,7 @@ export default function HomePage() {
                       <span className="meta-value">
                         {composer.death_year
                           ? `${composer.birth_year}–${composer.death_year}`
-                          : composer.birth_year}
+                          : `b.${composer.birth_year}`}
                       </span>
                     </div>
                   )}

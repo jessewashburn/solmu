@@ -71,7 +71,7 @@ export default function WorkDetailPage() {
               </Link>
               {(work.composer.birth_year || work.composer.death_year) && (
                 <span className="composer-dates">
-                  {' '}({work.composer.birth_year || '?'}–{work.composer.is_living ? 'present' : work.composer.death_year || '?'})
+                  {' '}({work.composer.is_living || !work.composer.death_year ? `b.${work.composer.birth_year || '?'}` : `${work.composer.birth_year || '?'}–${work.composer.death_year}`})
                 </span>
               )}
             </>
