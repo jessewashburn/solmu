@@ -10,6 +10,7 @@ from .views import (
 )
 from .auth_views import login_view, logout_view, get_csrf_token, current_user
 from .suggestion_views import submit_suggestion
+from .admin_views import update_all_is_living
 
 # Create router and register viewsets
 router = DefaultRouter()
@@ -30,6 +31,9 @@ urlpatterns = [
     
     # Suggestion endpoint
     path('suggestions/', submit_suggestion, name='submit-suggestion'),
+    
+    # Admin maintenance endpoints
+    path('admin/update-is-living/', update_all_is_living, name='update-is-living'),
     
     # API endpoints
     path('', include(router.urls)),
