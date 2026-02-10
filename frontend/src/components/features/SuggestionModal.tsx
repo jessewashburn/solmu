@@ -128,16 +128,24 @@ export default function SuggestionModal({ isOpen, onClose, itemType, itemData }:
         <label>Instrumentation</label>
         <input
           type="text"
-          value={formData.instrumentation || ''}
-          onChange={(e) => handleChange('instrumentation', e.target.value)}
+          value={formData.instrumentation_detail || ''}
+          onChange={(e) => handleChange('instrumentation_detail', e.target.value)}
         />
       </div>
       <div className="form-group">
-        <label>Year Composed</label>
+        <label>Catalog Number</label>
+        <input
+          type="text"
+          value={formData.catalog_number || ''}
+          onChange={(e) => handleChange('catalog_number', e.target.value)}
+        />
+      </div>
+      <div className="form-group">
+        <label>Composition Year</label>
         <input
           type="number"
-          value={formData.year_composed || ''}
-          onChange={(e) => handleChange('year_composed', e.target.value)}
+          value={formData.composition_year || ''}
+          onChange={(e) => handleChange('composition_year', e.target.value)}
         />
       </div>
     </>
