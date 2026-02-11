@@ -272,38 +272,223 @@ def get_instrumentation_variations() -> dict:
     Returns a dictionary mapping clean instrumentation category names to their variations.
     Used for matching user search terms to actual database entries.
     
-    Example: 'Solo' maps to ['Solo Guitar', 'Guitar Solo', 'solo']
-    This allows searching for 'Solo' to match entries like 'Solo Guitar' in the database.
+    Handles complex patterns including:
+    - Parenthetical numbers: guitar (2), electric guitar (2)
+    - Equivalency notation: clarinet (=bass clarinet), saxophone (=soprano, tenor)
+    - Alternative notation: flute (or violin), guitar (or lute)  
+    - Genre prefixes: Chamber Music:, Orchestra:, Dance/Ballet:, Stage Work:
+    - Electronics terminology: electronics, live electronics, tape, sampler
+    - Amplification: amplified clarinet, amplified guitar
+    - Multimedia: sound and video, live electronics, light system
+    - Complex orchestra notation: 3.2.4.sax.2, egtr, strgs
+    - Microtonal instruments: quarter-tone guitar
     
     Returns:
         dict: Mapping of normalized category names to list of variations
     """
     return {
-        'Solo': ['Solo Guitar', 'Guitar Solo', 'solo'],
-        'Duo': ['Guitar Duo', 'Duo for Guitar', 'Two Guitars', '2 Guitars', '2 guitars', 'duo'],
-        'Trio': ['Guitar Trio', 'Trio for Guitar', 'Three Guitars', '3 Guitars', '3 guitars', 'trio'],
-        'Quartet': ['Guitar Quartet', 'Quartet for Guitar', 'Four Guitars', '4 Guitars', '4 guitars', 'quartet'],
-        'Quintet': ['quintet'],
-        'Sextet': ['sextet'],
-        'Septet': ['septet'],
-        'Octet': ['octet'],
-        'Ensemble': ['Guitar Ensemble', 'Mixed Ensemble', 'ensemble'],
-        'Guitar and Orchestra': ['Guitar and Orchestra', 'Guitar with Orchestra', 'Concerto', 'concerto'],
-        'Guitar Orchestra': ['Guitar Orchestra', 'Orchestra', 'orchestra', 'Orchester'],
-        'Guitar and Voice': ['Voice and Guitar', 'Guitar and Vocal', 'Vocal and Guitar', 'voice', 'vocal', 'song'],
-        'Guitar and Flute': ['Flute and Guitar', 'Guitar with Flute', 'Flute with Guitar', 'flute'],
-        'Guitar and Violin': ['Violin and Guitar', 'Guitar with Violin', 'Violin with Guitar', 'violin'],
-        'Guitar and Cello': ['Cello and Guitar', 'Guitar with Cello', 'Cello with Guitar', 'cello', 'violoncello'],
-        'Guitar and Piano': ['Piano and Guitar', 'Guitar with Piano', 'Piano with Guitar', 'piano'],
-        'Guitar and Strings': ['String Ensemble', 'Guitar with Strings', 'strings'],
-        'Guitar and Percussion': ['Percussion and Guitar', 'Guitar with Percussion', 'percussion'],
-        'Guitar and Marimba': ['Marimba and Guitar', 'marimba'],
-        'Guitar and Mandolin': ['Mandolin and Guitar', 'mandolin'],
-        'Chamber Music': ['Chamber', 'chamber'],
-        'Guitar with Electronics': ['Electronics', 'Electronic', 'Tape', 'Fixed Media', 'electronics'],
-        'Electric Guitar': ['Electric Guitar Solo', 'electric'],
-        'Bass Guitar': ['Bass Guitar Solo', 'bass guitar', 'Electric Bass'],
+        # Solo patterns
+        'Solo': ['Solo Guitar', 'Guitar Solo', 'solo', 'Solo', 'Solo:', 'Solo: retuned steelstring guitar', 'Solo: detuned semi-acoustic guitar'],
+        
+        # Duo patterns with numbers and variations
+        'Duo': ['Guitar Duo', 'Duo for Guitar', 'Two Guitars', '2 Guitars', '2 guitars', 'duo', 'guitar (2)', 
+               'acoustic guitar (2)', 'electric guitar (2)', 'Duo', 'Duo:', 'Duo: electric guitar (2)',
+               'guitar and', 'guitar,'],
+        
+        # Trio patterns  
+        'Trio': ['Guitar Trio', 'Trio for Guitar', 'Three Guitars', '3 Guitars', '3 guitars', 'trio', 
+                'guitar (3)', 'acoustic guitar (3)', 'electric guitar (3)', 'Trio', 
+                'guitar, violin, viola', 'flute, guitar, harp', 'piano, guitar, violin',
+                'Trio: guitar (3) - live electronics'],
+        
+        # Quartet patterns
+        'Quartet': ['Guitar Quartet', 'Quartet for Guitar', 'Four Guitars', '4 Guitars', '4 guitars', 
+                   'quartet', 'guitar (4)', 'acoustic guitar (4)', 'electric guitar (4)', 'Quartet',
+                   'string quartet with guitar', 'guitar, violin (2), viola'],
+        
+        # Higher ensemble sizes
+        'Quintet': ['quintet', 'guitar (5)', 'acoustic guitar (5)', 'electric guitar (5)', 'Quintet',
+                   'wind quintet with guitar', 'flute, clarinet, percussion, melodica, guitar'],
+        'Sextet': ['sextet', 'guitar (6)', 'acoustic guitar (6)', 'electric guitar (6)', 'Sextet',
+                  'flute, clarinet (=bass clarinet), guitar (=electric guitar)'],
+        'Septet': ['septet', 'guitar (7)', 'acoustic guitar (7)', 'electric guitar (7)', 'Septet'],
+        'Octet': ['octet', 'guitar (8)', 'acoustic guitar (8)', 'electric guitar (8)', 'Octet'],
+        
+        # Ensemble patterns
+        'Ensemble': ['Guitar Ensemble', 'Mixed Ensemble', 'ensemble', 'Ensemble', 'Ensemble:',
+                    'chamber ensemble', 'instrumental ensemble', 'contemporary ensemble',
+                    'jazz guitar, gamelan ensemble'],
+        
+        # Orchestra and concerto patterns with complex notation
+        'Guitar and Orchestra': ['Guitar and Orchestra', 'Guitar with Orchestra', 'Concerto', 'concerto', 
+                                'Orchestra:', 'Orchestra', 'orchestra', 'symphonic orchestra', 
+                                'Concerto:', 'egtr', 'bgtr', 'strgs', 'hrp', 'pft', 'perc', 'timp',
+                                'guitar - orchestra', 'guitar - string orchestra',
+                                '2.2.2.2', '3.2.4.sax.2', '1.1.1.1', '4.3.3.1', '6perc-bgtr - strgs',
+                                'picc.1.1.1.1.dbn', '3(II=afl,III=picc)', '4perc-hrp-pft-gtr',
+                                '3(II=afl,III=picc).3(III=corA).3(III=bcl).asax.3(III=dbn)',
+                                '15.13.11.9.7', 'corA', 'dbn', '(49 players)', 'string orchestra',
+                                'chamber orchestra', 'philharmonic', 'symphony'],
+        
+        # Guitar ensemble patterns
+        'Guitar Orchestra': ['Guitar Orchestra', 'guitar orchestra', 'guitar orchestra (2)', 
+                            'guitar orchestra (4)', 'guitar orchestra (8)', 'Guitar Ensemble:',
+                            '24 (or 8) guitars', 'multiple guitars', 'guitar ensemble'],
+        
+        # Voice and chorus patterns with specific types
+        'Guitar and Voice': ['Voice and Guitar', 'Guitar and Vocal', 'Vocal and Guitar', 
+                            'voice', 'vocal', 'song', 'soprano', 'alto', 'tenor', 'bass', 
+                            'baritone', 'mezzo-soprano', 'chorus', 'voice - guitar',
+                            'soprano - guitar', 'tenor - guitar', 'mezzo-soprano - guitar',
+                            'SATB chorus', 'SATB chorus - guitar', 'Chorus and Guitar:',
+                            'soprano - mandolin, guitar', 'Chamber Music: soprano - guitar',
+                            'Chamber Music: tenor - guitar', 'Chamber Music: voice - guitar'],
+        
+        # Chamber music patterns with genre prefixes
+        'Chamber Music': ['Chamber', 'chamber', 'Chamber Music:', 'Chamber Music',
+                         'chamber music', 'small ensemble', 'mixed ensemble',
+                         'Chamber Music: flute, clarinet', 'Chamber Music: soprano - guitar',
+                         'Chamber Music: guitar, violoncello', 'Chamber Music: piano, guitar',
+                         'Chamber Music: flute, guitar', 'Chamber Music: guitar, harp'],
+        
+        # Stage works, multimedia, and theatrical productions
+        'Stage Work': ['Stage Work:', 'Stage Work', 'stage work', 'theatrical work',
+                      'Opera:', 'Opera', 'opera', 'musical theater', 'musical theatre',
+                      'operetta', 'singspiel', 'music theatre', 'Opera: stage work',
+                      'stage production', 'dramatic work', 'theatrical production'],
+        
+        # Electronics patterns with live/fixed media and multimedia
+        'Guitar with Electronics': ['Electronics', 'Electronic', 'Tape', 'Fixed Media', 
+                                   'Guitar with Electronics:', 'Guitar with Fixed Media:',
+                                   'electronics', 'live electronics', 'electronics (ad lib.)',
+                                   'synthesizer', 'synthesizers', 'effects processor',
+                                   'guitar - electronics', 'guitar - live electronics', 
+                                   'guitar - tape', 'electric guitar - electronics',
+                                   'electric guitar - live electronics', '- tape', '- electronics',
+                                   'sound and video', 'multimedia', 'light system',
+                                   'interactive electronics', 'computer-generated sounds',
+                                   'sampler', 'sequencer', 'midi controller'],
+        
+        # Amplified instruments category
+        'Amplified Instruments': ['amplified guitar', 'amplified clarinet', 'amplified piano',
+                                 'amplified violin', 'amplified cello', 'amplified flute',
+                                 'amplified accordion', 'amplified percussion', 'amplified harp',
+                                 'guitar (ampl.)', 'ampl.', 'amplified', 'electric guitar',
+                                 'electronic guitar', 'processed guitar'],
+        
+        # Electric guitar patterns
+        'Electric Guitar': ['Electric Guitar Solo', 'electric', 'Electric Guitar:', 'electric guitar', 
+                           'guitar (=electric guitar)', 'guitar (electric)',
+                           'egtr', 'e-guitar'],
+        
+        # Bass guitar patterns
+        'Bass Guitar': ['Bass Guitar Solo', 'bass guitar', 'Electric Bass', 'electric bass guitar',
+                       'bgtr', 'electric bass', 'bass guitar solo'],
+        
+        # Specialized guitar types and microtonal instruments
         '12-String Guitar': ['12-string guitar', '12-string', 'twelve-string'],
+        
+        'Special Guitar Types': ['quarter-tone guitar', 'prepared guitar', 'scordatura guitar',
+                               'retuned guitar', 'detuned guitar', 'microtonal guitar',
+                               'DADGAD guitar', 'open tuning guitar', 'altered tuning'],
+        
+        # Plucked instruments category
+        'Plucked Instruments': ['Plucked Instruments:', 'Plucked Instruments', 'plucked instruments',
+                              'mandolin', 'mandola', 'banjo', 'lute', 'theorbo', 'archlute',
+                              'chitarrone', 'vihuela', 'cittern', 'balalaika', 'sitar',
+                              'koto', 'pipa', 'oud', 'shamisen', 'charango', 'cuatro',
+                              'tiple', 'requinto', 'guitarrón', 'vina', 'sarod',
+                              'guitar (or lute)', 'lute (or guitar)', 'renaissance lute',
+                              'baroque lute', '13-course lute', '14-course lute'],
+        
+        # Flute family with alternatives and equivalencies
+        'Guitar and Flute': ['Flute and Guitar', 'Guitar with Flute', 'Flute with Guitar', 
+                            'flute', 'piccolo', 'alto flute', 'bass flute', 'pan flute',
+                            'flute (2)', 'flute (or violin)', 'flute (or clarinet)',
+                            'afl', 'picc', 'Chamber Music: flute, guitar',
+                            'alto flute, guitar'],
+        
+        # Clarinet family with equivalencies and amplification
+        'Guitar and Clarinet': ['clarinet', 'bass clarinet', 'clarinet (=bass clarinet)',
+                               'clarinet (2)', 'bcl', 'bass clarinet (=clarinet)',
+                               'Clarinet', 'Bass Clarinet', 'flute, clarinet',
+                               'amplified clarinet', 'clarinet (amplified)'],
+        
+        # Saxophone family
+        'Guitar and Saxophone': ['saxophone', 'alto saxophone', 'tenor saxophone', 
+                                'baritone saxophone', 'soprano saxophone', 'sax', 
+                                'asax', 'tsax', 'barsax', 'alt sax', 'tenor sax',
+                                'baritone saxophone (=soprano saxophone)'],
+        
+        # String instruments with variations
+        'Guitar and Violin': ['Violin and Guitar', 'Guitar with Violin', 'Violin with Guitar', 
+                             'violin', 'violin (2)', 'violins', 'vln', 'violin solo',
+                             'electric violin', 'guitar, violin', 'piano, guitar, violin'],
+        
+        'Guitar and Viola': ['Viola and Guitar', 'Guitar with Viola', 'viola', 'violas', 
+                            'vla', 'guitar, viola', 'flute, guitar, viola'],
+        
+        'Guitar and Cello': ['Cello and Guitar', 'Guitar with Cello', 'Cello with Guitar', 
+                            'cello', 'violoncello', 'violoncello,', 'cellos', 'vc', 'vlc',
+                            'guitar, violoncello', 'electric violoncello'],
+        
+        'Guitar and Strings': ['String Ensemble', 'Guitar with Strings', 'strings', 'strgs', 
+                              'double bass', 'contrabass', 'string bass', 'db', 'cb',
+                              'electric bass', 'piano, guitar, double bass'],
+        
+        # Keyboard instruments with alternatives  
+        'Guitar and Piano': ['Piano and Guitar', 'Guitar with Piano', 'Piano with Guitar', 
+                            'piano', 'prepared piano', 'harpsichord', 'keyboards', 'keyboard',
+                            'pft', 'pf', 'grand piano', 'fender rhodes', 'electric piano',
+                            'hammerklavier', 'harpsichord (or hammerklavier)', 'hpsd',
+                            'fender rhodes or grand piano', 'keyboard (fender rhodes or grand piano)',
+                            'Chamber Music: piano, guitar'],
+        
+        # Harp patterns
+        'Guitar and Harp': ['Harp and Guitar', 'harp', 'harps', 'hrp', 'harp (amplified)',
+                           'guitar, harp', 'Chamber Music: guitar, harp', 'flute, guitar, harp'],
+        
+        # Percussion with qualifiers
+        'Guitar and Percussion': ['Percussion and Guitar', 'Guitar with Percussion', 
+                                 'percussion', 'timpani', 'vibraphone', 'marimba', 'xylophone',
+                                 'drum kit', 'drums', 'timp', 'perc', 'vib', 'xyl',
+                                 'percussion (2)', 'percussion (3)', '2perc', '3perc', '4perc', '6perc',
+                                 'percussion (solo plus 2 other players)', 'steel drum', 'drkit'],
+        
+        'Guitar and Marimba': ['Marimba and Guitar', 'marimba'],
+        
+        # Mandolin patterns (also in Plucked Instruments)
+        'Guitar and Mandolin': ['Mandolin and Guitar', 'mandolin', 'mandolin (2)', 'mandola',
+                               'soprano - mandolin, guitar'],
+        
+        # Brass instruments
+        'Guitar and Trumpet': ['trumpet', 'french horn', 'trombone', 'tuba', 'contrabass tuba',
+                              'trumpet (2)', 'trumpets', 'tpt', 'cornet', 'horn', 'Horn',
+                              'horn (2)', 'horns', 'hn', 'trombones', 'tbn', 'bass trombone'],
+        
+        # Woodwind instruments  
+        'Guitar and Recorder': ['recorder', 'recorder (5)', 'alto recorder', 'recorder consort'],
+        
+        'Guitar and Oboe': ['oboe', 'bassoon', 'cor anglais', 'corA', 'oboe (or flute)',
+                           'oboe, guitar', 'double bassoon', 'dbn'],
+        
+        # Special instruments
+        'Guitar and Other': ['theremin', 'accordion', 'melodica', 'organ', 'hammond organ', 
+                           'horg', 'B3', 'celesta', 'cel'],
+        
+        # Gamelan and world music
+        'Guitar and Gamelan': ['gamelan', 'Gamelan', 'kantil', 'pemade', 'jublag', 'jegog', 
+                              'reyong', 'kemong', 'kempur', 'gong', 'kempli', 'cengceng'],
+        
+        # Genre categories
+        'Dance/Ballet': ['Dance/Ballet:', 'Ballet', 'dance', 'ballet', 'choreographic'],
+        
+        'Incidental and Film': ['Incidental and Film:', 'Film', 'film music', 'Incidental',
+                               'incidental music', 'theater music', 'stage music'],
+        
+        # Special categories
+        'Installation/Sound Environment': ['Installation/Sound Environment:', 'Installation', 
+                                          'Sound Environment']
     }
 
 
