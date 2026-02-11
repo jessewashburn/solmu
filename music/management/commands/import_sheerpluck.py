@@ -65,6 +65,26 @@ class Command(BaseCommand):
         if dry_run:
             self.stdout.write(self.style.WARNING('DRY RUN MODE - No changes will be saved'))
 
+        # Pre-load all instrumentation categories into cache for performance
+        if not dry_run:
+            self.stdout.write('Pre-loading data into cache for faster lookups...')
+            
+            # Load instrumentation categories
+            for cat in InstrumentationCategory.objects.all():
+                self.instrumentation_cache[cat.name] = cat
+            self.stdout.write(f'  Cached {len(self.instrumentation_cache)} instrumentation categories')
+            
+            # Load countries
+            for country in Country.objects.all():
+                self.country_cache[country.name] = country
+            self.stdout.write(f'  Cached {len(self.country_cache)} countries')
+            
+            # Load composers (with key: full_name_birthyear_deathyear)
+            for comp in Composer.objects.all():
+                cache_key = f"{comp.full_name}_{comp.birth_year}_{comp.death_year}"
+                self.composer_cache[cache_key] = comp
+            self.stdout.write(f'  Cached {len(self.composer_cache)} composers')
+
         # Get or create data sources
         if not dry_run:
             self.sheerpluck_source, created = DataSource.objects.get_or_create(
@@ -158,7 +178,7 @@ class Command(BaseCommand):
         # Process in batches for better performance
         self.stdout.write('Processing rows...')
         batch = []
-        batch_size = 100
+        batch_size = 100  # Balance between transaction size and commit frequency
         
         for row in all_rows:
             self.stats['total_rows'] += 1
@@ -172,10 +192,13 @@ class Command(BaseCommand):
                 if len(batch) >= batch_size:
                     self._process_batch(batch)
                     batch = []
+                    # Show progress immediately after each batch for first 500 rows
+                    if self.stats['total_rows'] <= 500:
+                        self.stdout.write(f"  {self.stats['total_rows']} rows processed...")
             
-            # Progress indicator
+            # Progress indicator every 1000 rows
             if self.stats['total_rows'] % 1000 == 0:
-                self.stdout.write(f"Processed {self.stats['total_rows']} rows...")
+                self.stdout.write(f"Processed {self.stats['total_rows']} rows... ({self.stats['works_created']} created, {self.stats['works_skipped']} skipped)")
         
         # Process remaining rows
         if batch and not dry_run:
@@ -312,7 +335,9 @@ class Command(BaseCommand):
             # Get or create instrumentation category
             instrumentation_category = None
             if instrumentation:
-                instrumentation_category = self._get_or_create_instrumentation(instrumentation)
+                # Map raw instrumentation to broad category
+                category_name = self._categorize_instrumentation(instrumentation)
+                instrumentation_category = self._get_or_create_instrumentation(category_name)
 
             # Create or update work (prevent duplicates)
             # First try to find by external_id if available
@@ -451,6 +476,42 @@ class Command(BaseCommand):
         )
         self.country_cache[country_name] = country
         return country
+
+    def _categorize_instrumentation(self, raw_instrumentation):
+        """Map raw instrumentation to a broad category using existing parser logic."""
+        if not raw_instrumentation:
+            return 'Other'
+        
+        from music.utils import get_instrumentation_variations
+        
+        variations_map = get_instrumentation_variations()
+        raw_lower = raw_instrumentation.lower()
+        
+        # Check each category's variations for matches
+        for category, variations in variations_map.items():
+            for variation in variations:
+                if variation.lower() in raw_lower:
+                    return category
+        
+        # Default fallback categories based on keywords
+        if 'orchestra' in raw_lower or 'symphon' in raw_lower:
+            return 'Guitar and Orchestra'
+        elif 'ensemble' in raw_lower:
+            return 'Ensemble'
+        elif 'chamber' in raw_lower:
+            return 'Chamber Music'
+        elif 'concerto' in raw_lower:
+            return 'Guitar and Orchestra'
+        elif 'solo' in raw_lower:
+            return 'Solo'
+        elif 'duo' in raw_lower or 'duet' in raw_lower:
+            return 'Duo'
+        elif 'trio' in raw_lower:
+            return 'Trio'
+        elif 'quartet' in raw_lower:
+            return 'Quartet'
+        else:
+            return 'Other'
 
     def _get_or_create_instrumentation(self, instrumentation_name):
         """Get or create an instrumentation category, with caching"""

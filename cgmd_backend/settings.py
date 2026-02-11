@@ -15,7 +15,8 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 # Load environment variables
-load_dotenv()
+BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / '.env')
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -95,9 +96,10 @@ DATABASES = {
         'PASSWORD': os.getenv('DB_PASSWORD', ''),
         'HOST': os.getenv('DB_HOST', 'db.bdnyxtqjybodniedgfg.supabase.co'),
         'PORT': os.getenv('DB_PORT', '5432'),
-        'CONN_MAX_AGE': 600,  # Keep connections alive for 10 minutes
+        'CONN_MAX_AGE': 0,  # Disable connection pooling to avoid timeouts
         'OPTIONS': {
-            'connect_timeout': 10,
+            'connect_timeout': 60,  # Increased timeout for large imports
+            'options': '-c statement_timeout=300000',  # 5 minute query timeout
         }
     }
 }
