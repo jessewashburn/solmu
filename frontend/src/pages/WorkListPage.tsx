@@ -126,7 +126,7 @@ export default function WorkListPage() {
     setError(null);
     
     try {
-      const params: any = {
+      const params: Record<string, string | number> = {
         page: currentPage,
         page_size: pageSize,
       };

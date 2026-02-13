@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import api from '../lib/api';
 import { ComposerListItem } from '../types';
 import { useDebounce } from '../hooks/useDebounce';
@@ -71,11 +71,7 @@ export default function ComposerListPage() {
     setCurrentPage(1);
   };
 
-  useEffect(() => {
-    fetchComposers();
-  }, [debouncedSearch, currentPage, birthYearRange, selectedInstrumentation, selectedCountry, backendOrderField, backendOrderDirection]);
-
-  const fetchComposers = async () => {
+  const fetchComposers = useCallback(async () => {
     // Use sortLoading for sorting operations to keep table visible
     if (sortColumn) {
       setSortLoading(true);
@@ -87,7 +83,7 @@ export default function ComposerListPage() {
     
     try {
       // Use server-side search with database indexes (fast!)
-      const params: any = {
+      const params: Record<string, string | number> = {
         page: currentPage,
         page_size: pageSize,
       };
@@ -133,7 +129,11 @@ export default function ComposerListPage() {
       setLoading(false);
       setSortLoading(false);
     }
-  };
+  }, [currentPage, pageSize, debouncedSearch, selectedInstrumentation, selectedCountry, birthYearRange, backendOrderField, backendOrderDirection, sortColumn]);
+
+  useEffect(() => {
+    fetchComposers();
+  }, [fetchComposers]);
 
   // All sorting handled by backend for consistent UX with loading overlay
 
