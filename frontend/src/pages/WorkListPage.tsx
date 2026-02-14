@@ -24,6 +24,7 @@ export default function WorkListPage() {
   const [totalCount, setTotalCount] = useState(0);
   const [backendOrderField, setBackendOrderField] = useState<string>('title_sort_key'); // Track backend ordering
   const [backendOrderDirection, setBackendOrderDirection] = useState<'asc' | 'desc'>('asc');
+  const [manualSortActive, setManualSortActive] = useState(false); // Track if user explicitly sorted
   const { sortColumn, sortDirection, handleSort } = useSort<'title' | 'composer' | 'instrumentation'>('title');
   const {
     yearRange: compositionYearRange,
@@ -39,6 +40,13 @@ export default function WorkListPage() {
   const debouncedSearch = useDebounce(searchQuery, 500); // Increased from 300ms to reduce API calls
   
   const pageSize = 200;
+
+  // Reset manual sort when search query changes to use relevance ordering
+  useEffect(() => {
+    if (debouncedSearch) {
+      setManualSortActive(false);
+    }
+  }, [debouncedSearch]);
 
   // All sorting handled by backend for consistent UX with loading overlay
 
@@ -56,6 +64,7 @@ export default function WorkListPage() {
     
     setBackendOrderField(fieldMap[column]);
     setBackendOrderDirection(newDirection);
+    setManualSortActive(true); // User explicitly sorted
     
     // Reset to first page when sorting
     setCurrentPage(1);
@@ -154,7 +163,7 @@ export default function WorkListPage() {
       }
 
       // Apply backend ordering - allow manual sorting to override search relevance
-      if (debouncedSearch && !sortColumn) {
+      if (debouncedSearch && !manualSortActive) {
         // When searching without manual sort, use relevance (no ordering parameter)
       } else {
         // When browsing OR when user manually sorted during search, use column ordering
@@ -171,7 +180,7 @@ export default function WorkListPage() {
       setLoading(false);
       setSortLoading(false);
     }
-  }, [currentPage, pageSize, debouncedSearch, selectedInstrumentation, selectedCountry, compositionYearRange, backendOrderField, backendOrderDirection, sortColumn, loading]);
+  }, [currentPage, pageSize, debouncedSearch, selectedInstrumentation, selectedCountry, compositionYearRange, backendOrderField, backendOrderDirection, manualSortActive, sortColumn, loading]);
 
   useEffect(() => {
     fetchWorks();
