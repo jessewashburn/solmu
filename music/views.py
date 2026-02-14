@@ -619,7 +619,7 @@ class WorkViewSet(viewsets.ModelViewSet):
     """
     queryset = Work.objects.select_related(
         'composer', 'instrumentation_category'
-    ).filter(is_public=True).order_by('title_sort_key').distinct()
+    ).filter(is_public=True).distinct()
     permission_classes = [IsAdminOrReadOnly]
     filter_backends = [DjangoFilterBackend, TrigramSearchFilter, filters.OrderingFilter]
     search_fields = ['title', 'title_normalized', 'composer__full_name', 'opus_number']
@@ -632,11 +632,17 @@ class WorkViewSet(viewsets.ModelViewSet):
         'composer__full_name',
         'instrumentation_category__name'
     ]
-    ordering = ['title_sort_key']
     filterset_fields = [
         'composer', 'instrumentation_category', 
         'difficulty_level', 'is_verified'
     ]
+    
+    def get_ordering(self):
+        """Override ordering to let search results use similarity ranking"""
+        search_param = self.request.query_params.get('search', '')
+        if search_param:
+            return None  # Let TrigramSearchFilter handle ordering
+        return ['title_sort_key']  # Default alphabetical ordering
     
     def get_serializer_class(self):
         if self.action == 'retrieve':
