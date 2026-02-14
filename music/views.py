@@ -83,12 +83,40 @@ class TrigramSearchFilter(filters.SearchFilter):
             ]
             queryset = queryset.filter(q_objects)
             if similarity_fields:
-                # Order by the maximum similarity across all fields for best relevance
-                # This ensures "Sor, Fernando" ranks higher than "Fernando, Other" when searching "Fernando Sor"
-                from django.db.models.functions import Greatest
-                max_similarity_expr = Greatest(*similarity_fields)
-                queryset = queryset.annotate(max_similarity=max_similarity_expr)
-                queryset = queryset.order_by('-max_similarity')
+                # Weight primary field more heavily for better relevance ranking
+                # For composers: full_name (contains both first and last name)
+                # For works: title (the main identifier)
+                from django.db.models import F, FloatField
+                from django.db.models.functions import Greatest, Coalesce
+                
+                # Determine which field to weight (full_name for composers, title for works)
+                primary_field = None
+                if 'full_name_similarity' in similarity_fields:
+                    primary_field = 'full_name_similarity'
+                elif 'title_similarity' in similarity_fields:
+                    primary_field = 'title_similarity'
+                
+                if primary_field:
+                    # Calculate weighted score: primary field gets 2x weight, others get 1x
+                    # This ensures exact/close matches to the primary field rank highest
+                    other_fields = [f for f in similarity_fields if f != primary_field]
+                    
+                    if other_fields:
+                        # Weighted: (primary * 2.0 + max(other fields)) / 2.0
+                        max_other_similarity = Greatest(*other_fields)
+                        weighted_score = (
+                            F(primary_field) * 2.0 + Coalesce(max_other_similarity, 0.0)
+                        ) / 2.0
+                    else:
+                        weighted_score = F(primary_field)
+                else:
+                    # Fallback if no primary field identified
+                    weighted_score = Greatest(*similarity_fields)
+                
+                queryset = queryset.annotate(
+                    relevance_score=weighted_score
+                )
+                queryset = queryset.order_by('-relevance_score')
         
         return queryset
 
