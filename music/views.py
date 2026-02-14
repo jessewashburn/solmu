@@ -61,7 +61,7 @@ class TrigramSearchFilter(filters.SearchFilter):
             return queryset
         
         # PostgreSQL trigram similarity search
-        similarity_threshold = 0.1  # Lowered threshold for more inclusive results
+        similarity_threshold = 0.3  # Balanced threshold: allows typos but filters weak matches
         search_fields = getattr(view, 'search_fields', [])
         
         if not search_fields:
