@@ -182,12 +182,21 @@ else:
 CORS_ALLOW_CREDENTIALS = True
 
 # CSRF settings for session auth with separate frontend
-CSRF_TRUSTED_ORIGINS = ['http://localhost:5173', 'http://127.0.0.1:5173'] if DEBUG else []
-CSRF_COOKIE_SAMESITE = 'Lax'
+if DEBUG:
+    CSRF_TRUSTED_ORIGINS = ['http://localhost:5173', 'http://127.0.0.1:5173']
+else:
+    # Production: Add S3 frontend URL
+    CSRF_TRUSTED_ORIGINS = ['http://cgmd-frontend-1770139819.s3-website-us-east-1.amazonaws.com']
+    if os.getenv('CORS_ALLOWED_ORIGINS'):
+        CSRF_TRUSTED_ORIGINS.extend(os.getenv('CORS_ALLOWED_ORIGINS', '').split(','))
+
+# Cookie settings for cross-site requests in production
+CSRF_COOKIE_SAMESITE = 'Lax' if DEBUG else 'None'
+CSRF_COOKIE_SECURE = not DEBUG  # HTTPS required for SameSite=None
 CSRF_COOKIE_HTTPONLY = False  # Allow JS to read CSRF token
-SESSION_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_SAMESITE = 'Lax' if DEBUG else 'None'
+SESSION_COOKIE_SECURE = not DEBUG  # HTTPS required for SameSite=None
 SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SECURE = not DEBUG  # HTTPS only in production
 
 # Cache settings
 CACHES = {

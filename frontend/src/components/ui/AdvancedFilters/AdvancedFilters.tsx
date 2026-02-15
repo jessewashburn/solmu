@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import '../../../styles/shared/ListPage.css';
 
 interface AdvancedFiltersProps {
@@ -27,6 +27,25 @@ export default function AdvancedFilters({
   onClearFilters,
 }: AdvancedFiltersProps) {
   const [showFilters, setShowFilters] = useState(false);
+  const [showInstrumentationDropdown, setShowInstrumentationDropdown] = useState(false);
+  const [showCountryDropdown, setShowCountryDropdown] = useState(false);
+  const instrumentationRef = useRef<HTMLDivElement>(null);
+  const countryRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (instrumentationRef.current && !instrumentationRef.current.contains(event.target as Node)) {
+        setShowInstrumentationDropdown(false);
+      }
+      if (countryRef.current && !countryRef.current.contains(event.target as Node)) {
+        setShowCountryDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   return (
     <>
@@ -75,39 +94,85 @@ export default function AdvancedFilters({
           </div>
 
           {/* Instrumentation Dropdown */}
-          <div className="filter-group">
+          <div className="filter-group" ref={instrumentationRef}>
             <label className="filter-label">Instrumentation</label>
-            <select
-              className="filter-select"
-              value={selectedInstrumentation}
-              onChange={(e) => onInstrumentationChange(e.target.value)}
-            >
-              <option value="">All Instrumentations</option>
-              {instrumentations.map((inst) => (
-                <option key={inst} value={inst}>
-                  {inst}
-                </option>
-              ))}
-            </select>
+            <div className="custom-dropdown">
+              <button
+                className="filter-select dropdown-button"
+                onClick={() => setShowInstrumentationDropdown(!showInstrumentationDropdown)}
+                type="button"
+              >
+                {selectedInstrumentation || 'All Instrumentations'}
+                <span className="dropdown-arrow">{showInstrumentationDropdown ? '▲' : '▼'}</span>
+              </button>
+              {showInstrumentationDropdown && (
+                <div className="dropdown-menu">
+                  <div
+                    className={`dropdown-option ${!selectedInstrumentation ? 'selected' : ''}`}
+                    onClick={() => {
+                      onInstrumentationChange('');
+                      setShowInstrumentationDropdown(false);
+                    }}
+                  >
+                    All Instrumentations
+                  </div>
+                  {instrumentations.map((inst) => (
+                    <div
+                      key={inst}
+                      className={`dropdown-option ${selectedInstrumentation === inst ? 'selected' : ''}`}
+                      onClick={() => {
+                        onInstrumentationChange(inst);
+                        setShowInstrumentationDropdown(false);
+                      }}
+                    >
+                      {inst}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Country Dropdown */}
-          <div className="filter-group">
+          <div className="filter-group" ref={countryRef}>
             <label className="filter-label">
               {yearRangeLabel.includes('Birth') ? 'Country' : 'Composer Country'}
             </label>
-            <select
-              className="filter-select"
-              value={selectedCountry}
-              onChange={(e) => onCountryChange(e.target.value)}
-            >
-              <option value="">All Countries</option>
-              {countries.map((country) => (
-                <option key={country} value={country}>
-                  {country}
-                </option>
-              ))}
-            </select>
+            <div className="custom-dropdown">
+              <button
+                className="filter-select dropdown-button"
+                onClick={() => setShowCountryDropdown(!showCountryDropdown)}
+                type="button"
+              >
+                {selectedCountry || 'All Countries'}
+                <span className="dropdown-arrow">{showCountryDropdown ? '▲' : '▼'}</span>
+              </button>
+              {showCountryDropdown && (
+                <div className="dropdown-menu">
+                  <div
+                    className={`dropdown-option ${!selectedCountry ? 'selected' : ''}`}
+                    onClick={() => {
+                      onCountryChange('');
+                      setShowCountryDropdown(false);
+                    }}
+                  >
+                    All Countries
+                  </div>
+                  {countries.map((country) => (
+                    <div
+                      key={country}
+                      className={`dropdown-option ${selectedCountry === country ? 'selected' : ''}`}
+                      onClick={() => {
+                        onCountryChange(country);
+                        setShowCountryDropdown(false);
+                      }}
+                    >
+                      {country}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Clear Filters Button */}
