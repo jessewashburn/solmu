@@ -57,11 +57,23 @@
   border-radius: var(--border-radius-sm);
   font-size: 16px;
   transition: border-color 0.2s;
+  background-color: #ffffff;
+  color: var(--color-text);
+}
+
+/* Override browser autofill styles */
+.search-input:-webkit-autofill,
+.search-input:-webkit-autofill:hover,
+.search-input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset;
+  -webkit-text-fill-color: var(--color-text);
+  transition: background-color 5000s ease-in-out 0s;
 }
 
 .search-input:focus {
   outline: none;
   border-color: var(--color-header);
+  background-color: #ffffff;
 }
 
 .btn-primary {

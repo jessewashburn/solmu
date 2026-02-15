@@ -58,11 +58,23 @@
   border-radius: var(--border-radius);
   outline: none;
   transition: all 0.3s ease;
+  background-color: #ffffff;
+  color: var(--color-text);
+}
+
+/* Override browser autofill styles */
+.search-input:-webkit-autofill,
+.search-input:-webkit-autofill:hover,
+.search-input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset;
+  -webkit-text-fill-color: var(--color-text);
+  transition: background-color 5000s ease-in-out 0s;
 }
 
 .search-input:focus {
   border-color: var(--color-accent);
   box-shadow: 0 0 0 3px rgba(149, 5, 0, 0.1);
+  background-color: #ffffff;
 }
 
 /* Advanced Filters */
@@ -133,11 +145,14 @@
   border-radius: var(--border-radius);
   outline: none;
   transition: all 0.3s ease;
+  background-color: #ffffff;
+  color: var(--color-text);
 }
 
 .filter-select:focus {
   border-color: var(--color-accent);
   box-shadow: 0 0 0 3px rgba(149, 5, 0, 0.1);
+  background-color: #ffffff;
 }
 
 .clear-filters-button {
