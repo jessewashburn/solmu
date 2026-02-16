@@ -87,8 +87,9 @@
   padding: 0.5rem;
   background: white;
   border-radius: 4px;
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 55% 40% auto;
+  gap: 1rem;
   align-items: center;
 }
 
@@ -96,6 +97,8 @@
   text-decoration: none;
   color: var(--color-accent);
   font-size: 0.85rem;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .work-title:hover {
@@ -105,6 +108,9 @@
 .work-instrumentation {
   font-size: 0.9rem;
   color: #666;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  text-align: center;
 }
 
 .no-works {
