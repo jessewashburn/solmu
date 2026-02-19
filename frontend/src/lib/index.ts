@@ -33,8 +33,8 @@ export const composerService = {
   },
 
   getWorks: async (id: number) => {
-    const response = await api.get<Work[]>(`/composers/${id}/works/`);
-    return response.data;
+    const response = await api.get<PaginatedResponse<Work>>(`/composers/${id}/works/`);
+    return response.data.results || [];
   },
 };
 

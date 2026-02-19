@@ -13,6 +13,7 @@ export default function ComposerDetailPage() {
   const [composer, setComposer] = useState<Composer | null>(null);
   const [works, setWorks] = useState<Work[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     loadComposer();
@@ -21,21 +22,24 @@ export default function ComposerDetailPage() {
   const loadComposer = async () => {
     if (!id) return;
     setLoading(true);
+    setError(null);
     try {
       const [composerData, worksData] = await Promise.all([
         composerService.getById(parseInt(id)),
         composerService.getWorks(parseInt(id)),
       ]);
       setComposer(composerData);
-      setWorks(worksData);
+      setWorks(Array.isArray(worksData) ? worksData : []);
     } catch (error) {
       console.error('Error loading composer:', error);
+      setError('Failed to load composer details. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   if (loading) return <LoadingSpinner />;
+  if (error) return <ErrorMessage title="Error Loading Composer" message={error} />;
   if (!composer) return <ErrorMessage title="Composer Not Found" message="The requested composer could not be found." />;
 
   const hasDates = composer.birth_year || composer.death_year || composer.is_living;
@@ -75,27 +79,31 @@ export default function ComposerDetailPage() {
 
       <section className="detail-section">
         <h2>Works ({works.length})</h2>
-        <div className="works-grid">
-          {works.map((work) => (
-            <Link
-              key={work.id}
-              to={`/works/${work.id}`}
-              className="work-card"
-            >
-              <h3>{work.title}</h3>
-              {work.catalog_number && (
-                <p className="work-card-meta">
-                  Catalog: {work.catalog_number}
-                </p>
-              )}
-              {work.instrumentation_detail && (
-                <p className="work-card-meta">
-                  {work.instrumentation_detail}
-                </p>
-              )}
-            </Link>
-          ))}
-        </div>
+        {works.length > 0 ? (
+          <div className="works-grid">
+            {works.map((work) => (
+              <Link
+                key={work.id}
+                to={`/works/${work.id}`}
+                className="work-card"
+              >
+                <h3>{work.title}</h3>
+                {work.catalog_number && (
+                  <p className="work-card-meta">
+                    Catalog: {work.catalog_number}
+                  </p>
+                )}
+                {work.instrumentation_detail && (
+                  <p className="work-card-meta">
+                    {work.instrumentation_detail}
+                  </p>
+                )}
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <p className="empty-state">No works found for this composer.</p>
+        )}
       </section>
     </div>
   );
