@@ -94,7 +94,7 @@ DATABASES = {
         'NAME': os.getenv('DB_NAME', 'postgres'),
         'USER': os.getenv('DB_USER', 'postgres'),
         'PASSWORD': os.getenv('DB_PASSWORD', ''),
-        'HOST': os.getenv('DB_HOST', 'db.bdnyxtqjybodniedgfg.supabase.co'),
+        'HOST': os.getenv('DB_HOST', 'db.bdnyxtqjybodndiedgfg.supabase.co'),
         'PORT': os.getenv('DB_PORT', '5432'),
         'CONN_MAX_AGE': 0,  # Disable connection pooling to avoid timeouts
         'OPTIONS': {
@@ -178,15 +178,24 @@ if DEBUG:
     CORS_ALLOW_ALL_ORIGINS = True
     CORS_ALLOWED_ORIGINS = ['http://localhost:5173', 'http://127.0.0.1:5173']  # Vite dev server
 else:
-    CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', '').split(',') if os.getenv('CORS_ALLOWED_ORIGINS') else []
+    CORS_ALLOWED_ORIGINS = [
+        'https://solmuapp.com',
+        'https://www.solmuapp.com',
+        'http://cgmd-frontend-1770139819.s3-website-us-east-1.amazonaws.com',
+    ]
+    if os.getenv('CORS_ALLOWED_ORIGINS'):
+        CORS_ALLOWED_ORIGINS.extend(os.getenv('CORS_ALLOWED_ORIGINS', '').split(','))
 CORS_ALLOW_CREDENTIALS = True
 
 # CSRF settings for session auth with separate frontend
 if DEBUG:
     CSRF_TRUSTED_ORIGINS = ['http://localhost:5173', 'http://127.0.0.1:5173']
 else:
-    # Production: Add S3 frontend URL
-    CSRF_TRUSTED_ORIGINS = ['http://cgmd-frontend-1770139819.s3-website-us-east-1.amazonaws.com']
+    CSRF_TRUSTED_ORIGINS = [
+        'https://solmuapp.com',
+        'https://www.solmuapp.com',
+        'http://cgmd-frontend-1770139819.s3-website-us-east-1.amazonaws.com',
+    ]
     if os.getenv('CORS_ALLOWED_ORIGINS'):
         CSRF_TRUSTED_ORIGINS.extend(os.getenv('CORS_ALLOWED_ORIGINS', '').split(','))
 
