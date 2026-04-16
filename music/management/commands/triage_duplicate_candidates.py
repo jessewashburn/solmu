@@ -24,16 +24,32 @@ TRAILING_INSTRUMENT_RE = re.compile(
 )
 
 NO_NUM_RE = re.compile(
-    r"(?:no\.?|nr\.?|num\.?|n°|#)\s*(\d+)", re.IGNORECASE
+    r"(?:no\.?|nr\.?|num\.?|n°|#)\s*(\d+)(?!\d)", re.IGNORECASE
 )
-ORDINAL_RE = re.compile(r"\b(\d+)(?:st|nd|rd|th)\b", re.IGNORECASE)
-ROMAN_AFTER_NOUN_RE = re.compile(
-    r"\b(?:prelude|preludio|etude|estudio|study|sonata|sonatina|fugue|fuga|"
-    r"choros|chôros|danza|variation|variations|movement|mvt|part|piece|"
-    r"suite|nocturne|intermezzo|caprice|capriccio|waltz|vals|minuet|minuetto|"
-    r"scherzo|impromptu|rondo|canzona|canzone|fantasia|tango)\s+([ivx]+)\b",
+ORDINAL_RE = re.compile(r"\b(\d+)(?:st|nd|rd|th|a|o)\b", re.IGNORECASE)
+BOOK_VOL_RE = re.compile(
+    r"\b(?:book|vol\.?|volume|coleccion|collecci[oó]n|parte?|heft|cahier|"
+    r"cuaderno|fascicle|livro?|tome?|band)\s+(\d+)",
     re.IGNORECASE,
 )
+ROMAN_AFTER_NOUN_RE = re.compile(
+    r"\b(?:prelude|preludio|etude|estudio|study|sonata|sonatina|fugue|fuga|"
+    r"choros|ch[oô]ros|danza|variation|variations|movement|mvt|part|piece|"
+    r"suite|nocturne|intermezzo|caprice|capriccio|waltz|vals|minuet|minuetto|"
+    r"scherzo|impromptu|rondo|canzona|canzone|fantasia|tango|trio|duo|"
+    r"quartet|quintet|concerto|serenade|divertimento|rhapsody|ballade|"
+    r"bagatelle|mazurka|polonaise|zyklus|cycle|series)\s+([ivx]+)\b",
+    re.IGNORECASE,
+)
+TRAILING_ROMAN_RE = re.compile(r"\b([ivx]+)\s*$", re.IGNORECASE)
+TITLE_OP_RE = re.compile(
+    r"\bop\.?\s*(\d+[a-z]?)\b", re.IGNORECASE
+)
+CATALOG_NUM_RE = re.compile(
+    r"\b(?:ms|hwv|twv|sz|bb|wq|h|l|p|m|t|g|rh|jb|cnw)\s*\.?\s*(\d+)\b",
+    re.IGNORECASE,
+)
+TRAILING_BARE_NUM_RE = re.compile(r"\b(\d+)\s*$")
 KEY_RE = re.compile(
     r"\bin\s+([a-g](?:\s*[#b♯♭])?)\s*(major|minor|maj|min|m)\b",
     re.IGNORECASE,
@@ -71,21 +87,32 @@ def normalize_title(title: str, composer_last: str = "") -> str:
     return " ".join(t.split())
 
 
-def extract_movement_numbers(title: str) -> set:
-    """Return set of integer movement numbers implied by the title."""
+def extract_numbers(title: str) -> tuple:
+    """Return (movement_nums, catalog_nums) as separate sets."""
     if not title:
-        return set()
+        return set(), set()
     t = strip_accents(title)
-    nums = set()
+    movs = set()
+    cats = set()
     for m in NO_NUM_RE.finditer(t):
-        nums.add(int(m.group(1)))
+        movs.add(int(m.group(1)))
     for m in ORDINAL_RE.finditer(t):
-        nums.add(int(m.group(1)))
+        movs.add(int(m.group(1)))
+    for m in BOOK_VOL_RE.finditer(t):
+        movs.add(int(m.group(1)))
     for m in ROMAN_AFTER_NOUN_RE.finditer(t):
         roman = m.group(1).lower()
         if roman in ROMAN_MAP:
-            nums.add(ROMAN_MAP[roman])
-    return nums
+            movs.add(ROMAN_MAP[roman])
+    for m in TRAILING_ROMAN_RE.finditer(t):
+        roman = m.group(1).lower()
+        if roman in ROMAN_MAP and roman not in ("i", "v", "x", "d", "c", "m"):
+            movs.add(ROMAN_MAP[roman])
+    for m in CATALOG_NUM_RE.finditer(t):
+        cats.add(int(m.group(1)))
+    for m in TRAILING_BARE_NUM_RE.finditer(t):
+        movs.add(int(m.group(1)))
+    return movs, cats
 
 
 def extract_key(title: str) -> str:
@@ -118,13 +145,16 @@ def triage(w1: Work, w2: Work, score: float) -> tuple:
     n1 = normalize_title(t1, last)
     n2 = normalize_title(t2, last)
 
-    nums1 = extract_movement_numbers(t1)
-    nums2 = extract_movement_numbers(t2)
+    movs1, cats1 = extract_numbers(t1)
+    movs2, cats2 = extract_numbers(t2)
 
     # Rule 1: movement / opus / key mismatch → DISTINCT
-    if nums1 and nums2 and not (nums1 & nums2):
+    if movs1 and movs2 and not (movs1 & movs2):
         return ("distinct", "high", None,
-                f"movement-number mismatch {sorted(nums1)} vs {sorted(nums2)}")
+                f"movement-number mismatch {sorted(movs1)} vs {sorted(movs2)}")
+    if cats1 and cats2 and not (cats1 & cats2):
+        return ("distinct", "high", None,
+                f"catalog-number mismatch {sorted(cats1)} vs {sorted(cats2)}")
 
     if w1.opus_number and w2.opus_number:
         o1 = w1.opus_number.strip().lower()
@@ -133,10 +163,27 @@ def triage(w1: Work, w2: Work, score: float) -> tuple:
             return ("distinct", "high", None,
                     f"opus mismatch {w1.opus_number} vs {w2.opus_number}")
 
+    # Also check opus numbers embedded in titles (e.g. "Op.24" vs "Op.7")
+    t1_ops = set(m.group(1).lower() for m in TITLE_OP_RE.finditer(strip_accents(t1)))
+    t2_ops = set(m.group(1).lower() for m in TITLE_OP_RE.finditer(strip_accents(t2)))
+    if t1_ops and t2_ops and not (t1_ops & t2_ops):
+        return ("distinct", "high", None,
+                f"title-opus mismatch {sorted(t1_ops)} vs {sorted(t2_ops)}")
+
     key1, key2 = extract_key(t1), extract_key(t2)
     if key1 and key2 and key1 != key2:
         return ("distinct", "high", None,
                 f"key mismatch {key1} vs {key2}")
+
+    # Leading count mismatch: "4 Variations" vs "6 Variations"
+    lc1 = re.match(r"(\d+)\s+\w", strip_accents(t1))
+    lc2 = re.match(r"(\d+)\s+\w", strip_accents(t2))
+    if lc1 and lc2 and lc1.group(1) != lc2.group(1):
+        rest1 = strip_accents(t1)[lc1.end(1):].strip().lower()
+        rest2 = strip_accents(t2)[lc2.end(1):].strip().lower()
+        if SequenceMatcher(None, rest1, rest2).ratio() > 0.85:
+            return ("distinct", "high", None,
+                    f"leading-count mismatch {lc1.group(1)} vs {lc2.group(1)}")
 
     # Rule 2: annotated-form match → DUPLICATE
     same_inst = (
