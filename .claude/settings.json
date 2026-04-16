@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(awk -F',' 'NR>1 {print $1}' c:/Users/jesse/cgmd/duplicate_candidates.csv)",
+      "Bash(awk -F',' 'NR>1 {if \\($1>=1.25\\) t1++; else if \\($1>=1.0\\) t2++; else if \\($1>=0.9\\) t3++; else t4++} END {print \"≥1.25:\",t1; print \"1.0-1.25:\",t2; print \"0.9-1.0:\",t3; print \"0.75-0.9:\",t4}' c:/Users/jesse/cgmd/duplicate_candidates.csv)",
+      "Bash(awk -F',' 'NR>1 {print $\\(NF-3\\)\"|\"$\\(NF-2\\)}' c:/Users/jesse/cgmd/duplicate_candidates_triaged.csv)",
+      "Bash(python -c ' *)",
+      "Bash(python manage.py find_duplicate_candidates --threshold 0.75 --output duplicate_candidates.csv)",
+      "Bash(python manage.py shell -c ' *)"
+    ]
+  }
+}
