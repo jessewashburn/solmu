@@ -32,7 +32,7 @@ export default function AboutPage() {
           own tastes and needs, not what's trending or what an algorithm thinks they should hear.
         </p>
         <p>
-          <i>-Jesse Washburn, Developer of Solmu</i>
+          <em>-Jesse Washburn, Developer of Solmu</em>
         </p>
       </div>
     </div>
