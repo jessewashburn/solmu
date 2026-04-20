@@ -39,7 +39,7 @@ export default function WorkListPage() {
   const countries = useCountries();
   const debouncedSearch = useDebounce(searchQuery, 500); // Increased from 300ms to reduce API calls
   
-  const pageSize = 200;
+  const pageSize = 50;
 
   // Reset manual sort when search query changes to use relevance ordering
   useEffect(() => {
@@ -154,12 +154,10 @@ export default function WorkListPage() {
         params.composer_country = selectedCountry;
       }
 
-      // Add composition year filters if set
-      if (compositionYearRange[0] > 1400) {
-        params.composition_year_min = compositionYearRange[0];
-      }
-      if (compositionYearRange[1] < 2025) {
-        params.composition_year_max = compositionYearRange[1];
+      // Add composer birth year filters if either end has been adjusted
+      if (compositionYearRange[0] !== 1400 || compositionYearRange[1] !== 2025) {
+        params.composer_birth_year_min = compositionYearRange[0];
+        params.composer_birth_year_max = compositionYearRange[1];
       }
 
       // Apply backend ordering - allow manual sorting to override search relevance
@@ -283,12 +281,6 @@ export default function WorkListPage() {
           </div>
         )}
 
-        {/* No Results */}
-        {!loading && !error && works.length === 0 && (
-          <div className="empty-state">
-            <p>No works found. Try adjusting your search.</p>
-          </div>
-        )}
       </div>
     </div>
   );

@@ -696,11 +696,20 @@ class WorkViewSet(viewsets.ModelViewSet):
         # Filter by composition year range
         year_min = self.request.query_params.get('composition_year_min')
         year_max = self.request.query_params.get('composition_year_max')
-        
+
         if year_min:
             queryset = queryset.filter(composition_year__gte=year_min)
         if year_max:
             queryset = queryset.filter(composition_year__lte=year_max)
+
+        # Filter by composer birth year range
+        composer_birth_min = self.request.query_params.get('composer_birth_year_min')
+        composer_birth_max = self.request.query_params.get('composer_birth_year_max')
+
+        if composer_birth_min:
+            queryset = queryset.filter(composer__birth_year__gte=composer_birth_min)
+        if composer_birth_max:
+            queryset = queryset.filter(composer__birth_year__lte=composer_birth_max)
         
         # Filter by difficulty range
         difficulty_min = self.request.query_params.get('difficulty_min')
@@ -790,6 +799,52 @@ class WorkViewSet(viewsets.ModelViewSet):
         works = self.get_queryset().order_by('-created_at')[:limit]
         serializer = WorkListSerializer(works, many=True)
         return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def highlighted(self, request):
+        """
+        Get today's highlighted work — a deterministic daily pick.
+        Uses the current date as a seed so every visitor sees the same work
+        on the same day, but the pick changes daily.
+        """
+        from django.core.cache import cache
+        import math
+
+        cache_key = 'highlighted_work_today'
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return Response(cached)
+
+        today = __import__('datetime').date.today()
+        seed = today.year * 10000 + today.month * 100 + today.day
+
+        total = self.get_queryset().count()
+        if total == 0:
+            return Response(
+                {'error': 'No works available'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        # Deterministic index from date seed
+        rand = math.sin(seed) * 10000
+        index = int((rand - math.floor(rand)) * total)
+
+        work = self.get_queryset().prefetch_related('work_tags__tag').select_related(
+            'composer__country', 'instrumentation_category', 'data_source'
+        )[index]
+
+        serializer = WorkDetailSerializer(work)
+        data = serializer.data
+
+        # Cache until midnight (max 24 h)
+        import datetime
+        now = datetime.datetime.now()
+        seconds_until_midnight = (
+            datetime.datetime.combine(now.date() + datetime.timedelta(days=1), datetime.time.min) - now
+        ).seconds
+        cache.set(cache_key, data, seconds_until_midnight)
+
+        return Response(data)
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):

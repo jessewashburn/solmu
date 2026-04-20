@@ -1,14 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { workService, composerService } from '../lib';
-import { Work, Composer } from '../types';
+import { workService } from '../lib';
+import { Work } from '../types';
 import SuggestionButton from '../components/features/SuggestionButton';
 import ExternalLinks from '../components/ui/ExternalLinks';
 import './HomePage.css';
 
 export default function HomePage() {
   const [highlightedWork, setHighlightedWork] = useState<Work | null>(null);
-  const [composer, setComposer] = useState<Composer | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -18,33 +17,8 @@ export default function HomePage() {
   const loadHighlightedWork = async () => {
     setLoading(true);
     try {
-      // Get total count of works to calculate random page
-      const worksResponse = await workService.getAll(1, '');
-      
-      // Calculate max page (API uses 200 items per page by default)
-      const pageSize = 200;
-      const maxPage = Math.ceil(worksResponse.count / pageSize);
-      
-      // Get a random page number based on today's date
-      const today = new Date();
-      const seed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
-      const random = Math.sin(seed) * 10000;
-      const normalized = random - Math.floor(random);
-      const randomPage = Math.floor(normalized * maxPage) + 1;
-      
-      // Fetch a page of works and pick the first one
-      const randomWorksPage = await workService.getAll(randomPage, '');
-      const work = randomWorksPage.results[0];
-      
-      if (work) {
-        setHighlightedWork(work);
-        
-        // Fetch full composer details if available
-        if (work.composer) {
-          const composerData = await composerService.getById(work.composer.id);
-          setComposer(composerData);
-        }
-      }
+      const work = await workService.getHighlighted();
+      setHighlightedWork(work);
     } catch (error) {
       console.error('Error loading highlighted work:', error);
     } finally {
@@ -91,22 +65,22 @@ export default function HomePage() {
                   <span>Unknown Composer</span>
                 )}
               </div>
-              {composer && (
+              {highlightedWork.composer && (
                 <div className="composer-metadata">
-                  {composer.birth_year && (
+                  {highlightedWork.composer.birth_year && (
                     <div className="composer-meta-item">
                       <span className="meta-label">Born</span>
                       <span className="meta-value">
-                        {composer.death_year
-                          ? `${composer.birth_year}–${composer.death_year}`
-                          : `b.${composer.birth_year}`}
+                        {highlightedWork.composer.death_year
+                          ? `${highlightedWork.composer.birth_year}–${highlightedWork.composer.death_year}`
+                          : `b.${highlightedWork.composer.birth_year}`}
                       </span>
                     </div>
                   )}
-                  {composer.country && (
+                  {highlightedWork.composer.country_name && (
                     <div className="composer-meta-item">
                       <span className="meta-label">Country</span>
-                      <span className="meta-value">{composer.country.name}</span>
+                      <span className="meta-value">{highlightedWork.composer.country_name}</span>
                     </div>
                   )}
                 </div>
@@ -143,9 +117,9 @@ export default function HomePage() {
             {highlightedWork.tags && highlightedWork.tags.length > 0 && (
               <div className="work-tags">
                 <strong>Tags:</strong>
-                {highlightedWork.tags.map((tag) => (
-                  <span key={tag.id} className="work-tag">
-                    {tag.name}
+                {(highlightedWork.tags as unknown as string[]).map((tag, index) => (
+                  <span key={index} className="work-tag">
+                    {tag}
                   </span>
                 ))}
               </div>

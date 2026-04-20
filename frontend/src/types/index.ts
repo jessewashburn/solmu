@@ -34,6 +34,7 @@ export interface Work {
     birth_year: number | null;
     death_year: number | null;
     is_living: boolean;
+    country_name?: string | null;
   } | null;
   title: string;
   catalog_number: string | null;

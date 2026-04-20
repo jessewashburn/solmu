@@ -60,6 +60,11 @@ export const workService = {
     const response = await api.get<Work[]>('/works/recent/');
     return response.data;
   },
+
+  getHighlighted: async () => {
+    const response = await api.get<Work>('/works/highlighted/');
+    return response.data;
+  },
 };
 
 export const searchService = {

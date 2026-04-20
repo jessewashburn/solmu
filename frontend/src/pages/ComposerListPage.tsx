@@ -49,7 +49,7 @@ export default function ComposerListPage() {
   // Cache loaded works to prevent unnecessary API calls
   const [loadedWorksCache, setLoadedWorksCache] = useState<Record<number, ComposerWork[]>>({});
   
-  const pageSize = 200;
+  const pageSize = 50;
 
   // Unified sort handler for all columns
   const handleColumnSort = (column: 'name' | 'country' | 'birth_year' | 'work_count') => {
@@ -111,11 +111,9 @@ export default function ComposerListPage() {
         params.country_name = selectedCountry;
       }
       
-      // Add birth year filters if set
-      if (birthYearRange[0] > 1400) {
+      // Add birth year filters if either end has been adjusted
+      if (birthYearRange[0] !== 1400 || birthYearRange[1] !== 2025) {
         params.birth_year_min = birthYearRange[0];
-      }
-      if (birthYearRange[1] < 2025) {
         params.birth_year_max = birthYearRange[1];
       }
 
