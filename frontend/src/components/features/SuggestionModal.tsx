@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import api from '../../lib/api';
 import './SuggestionModal.css';
 
 interface SuggestionModalProps {
@@ -22,48 +23,23 @@ export default function SuggestionModal({ isOpen, onClose, itemType, itemData }:
     setSubmitStatus('idle');
 
     try {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
-      
-      // Get CSRF token
-      await fetch(`${API_URL}/auth/csrf/`, {
-        credentials: 'include'
-      });
-      
-      const csrfToken = document.cookie
-        .split('; ')
-        .find(row => row.startsWith('csrftoken='))
-        ?.split('=')[1];
-      
-      // Map itemType to suggestion_type
       const suggestionType = itemType === 'composer' ? 'edit_composer' : 'edit_work';
-      
-      const response = await fetch(`${API_URL}/suggestions/`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': csrfToken || '',
-        },
-        body: JSON.stringify({
-          suggestion_type: suggestionType,
-          title: `Edit ${itemType}: ${itemData.full_name || itemData.title}`,
-          description: comment || 'Suggested changes submitted via form',
-          suggested_data: formData,
-          related_composer: itemType === 'composer' ? itemData.id : null,
-          related_work: itemType === 'work' ? itemData.id : null,
-        }),
+
+      await api.post('/suggestions/', {
+        suggestion_type: suggestionType,
+        title: `Edit ${itemType}: ${itemData.full_name || itemData.title}`,
+        description: comment || 'Suggested changes submitted via form',
+        suggested_data: formData,
+        related_composer: itemType === 'composer' ? itemData.id : null,
+        related_work: itemType === 'work' ? itemData.id : null,
       });
 
-      if (response.ok) {
-        setSubmitStatus('success');
-        setTimeout(() => {
-          onClose();
-          setSubmitStatus('idle');
-          setComment('');
-        }, 2000);
-      } else {
-        setSubmitStatus('error');
-      }
+      setSubmitStatus('success');
+      setTimeout(() => {
+        onClose();
+        setSubmitStatus('idle');
+        setComment('');
+      }, 2000);
     } catch (error) {
       console.error('Error submitting suggestion:', error);
       setSubmitStatus('error');

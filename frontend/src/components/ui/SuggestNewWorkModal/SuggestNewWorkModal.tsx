@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import api from '../../../lib/api';
 import '../../features/SuggestionModal.css';
 
 interface SuggestNewWorkModalProps {
@@ -34,37 +35,27 @@ export default function SuggestNewWorkModal({ isOpen, onClose }: SuggestNewWorkM
     setSubmitStatus('idle');
 
     try {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
-      const response = await fetch(`${API_URL}/suggestions/new-work/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          item_type: 'new_work',
-          suggested_data: formData,
-          comment: formData.comment,
-        }),
+      await api.post('/suggestions/', {
+        suggestion_type: 'new_work',
+        title: `New work: ${formData.work_title} by ${formData.composer_name}`,
+        description: formData.comment || 'New work suggestion submitted via form',
+        suggested_data: formData,
       });
 
-      if (response.ok) {
-        setSubmitStatus('success');
-        setTimeout(() => {
-          onClose();
-          setSubmitStatus('idle');
-          setFormData({
-            composer_name: '',
-            composer_birth_year: '',
-            composer_death_year: '',
-            composer_country: '',
-            work_title: '',
-            instrumentation_detail: '',
-            comment: '',
-          });
-        }, 2000);
-      } else {
-        setSubmitStatus('error');
-      }
+      setSubmitStatus('success');
+      setTimeout(() => {
+        onClose();
+        setSubmitStatus('idle');
+        setFormData({
+          composer_name: '',
+          composer_birth_year: '',
+          composer_death_year: '',
+          composer_country: '',
+          work_title: '',
+          instrumentation_detail: '',
+          comment: '',
+        });
+      }, 2000);
     } catch (error) {
       console.error('Error submitting new work suggestion:', error);
       setSubmitStatus('error');
