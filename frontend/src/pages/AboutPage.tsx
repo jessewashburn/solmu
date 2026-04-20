@@ -8,8 +8,8 @@ export default function AboutPage() {
       </h1>
       <div className="about-content">
         <p>
-          Solmu - Finnish for "knot" - is an attempt to tie together all the available web sources 
-          and preserve the full scope of classical guitar repertoire. It's meant to connect us more 
+          Solmu (Finnish for "knot") is an attempt to tie together all the available guitar web resources 
+          and preserve the full scope of its repertoire. It's meant to connect us more 
           deeply to our repertoire and make it accessible to anyone looking for their next piece.
         </p>
         <p>
@@ -20,7 +20,7 @@ export default function AboutPage() {
           and personal collections.
         </p>
         <p>
-          What made it worse was how algorithms heavily weighted already popular music when searching. 
+          This was made worse by how algorithms heavily weighted already popular music when searching. 
           The same pieces kept surfacing while the vast majority remained invisible. New music would get 
           played once and then forgotten. It struck me that no one even knew how 
           many published guitar works actually existed.
@@ -32,7 +32,7 @@ export default function AboutPage() {
           own tastes and needs, not what's trending or what an algorithm thinks they should hear.
         </p>
         <p>
-          -Jesse Washburn, Developer of Solmu
+          <i>-Jesse Washburn, Developer of Solmu</i>
         </p>
       </div>
     </div>

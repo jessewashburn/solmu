@@ -142,7 +142,7 @@ export default function HomePage() {
       <section className="browse-section">
         <h2 className="section-title">Explore the Database</h2>
         <p className="section-description">
-          Our comprehensive database features tens of thousands of composers and works, spanning centuries of guitar music from around the world.
+          Our database features tens of thousands of guitar composers and works, spanning centuries of music from around the world.
         </p>
         <div className="browse-cards">
           <Link to="/composers" className="browse-card">
