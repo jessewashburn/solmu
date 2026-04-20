@@ -38,7 +38,8 @@ export default function WorkListPage() {
   const instrumentations = useInstrumentations();
   const countries = useCountries();
   const debouncedSearch = useDebounce(searchQuery, 500); // Increased from 300ms to reduce API calls
-  
+  const debouncedYearRange = useDebounce(compositionYearRange, 300);
+
   const pageSize = 50;
 
   // Reset manual sort when search query changes to use relevance ordering
@@ -155,9 +156,9 @@ export default function WorkListPage() {
       }
 
       // Add composer birth year filters if either end has been adjusted
-      if (compositionYearRange[0] !== 1400 || compositionYearRange[1] !== 2025) {
-        params.composer_birth_year_min = compositionYearRange[0];
-        params.composer_birth_year_max = compositionYearRange[1];
+      if (debouncedYearRange[0] !== 1400 || debouncedYearRange[1] !== 2025) {
+        params.composer_birth_year_min = debouncedYearRange[0];
+        params.composer_birth_year_max = debouncedYearRange[1];
       }
 
       // Apply backend ordering - allow manual sorting to override search relevance
@@ -178,7 +179,7 @@ export default function WorkListPage() {
       setLoading(false);
       setSortLoading(false);
     }
-  }, [currentPage, pageSize, debouncedSearch, selectedInstrumentation, selectedCountry, compositionYearRange, backendOrderField, backendOrderDirection, manualSortActive, sortColumn, loading]);
+  }, [currentPage, pageSize, debouncedSearch, selectedInstrumentation, selectedCountry, debouncedYearRange, backendOrderField, backendOrderDirection, manualSortActive, sortColumn, loading]);
 
   useEffect(() => {
     fetchWorks();
@@ -190,7 +191,6 @@ export default function WorkListPage() {
     <div className="list-page">
       <header className="page-header">
         <h1>Works</h1>
-        <p>Browse 74,000+ guitar works</p>
       </header>
 
       <SearchBar

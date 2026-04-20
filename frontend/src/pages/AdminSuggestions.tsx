@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
@@ -30,22 +30,22 @@ export default function AdminSuggestions() {
   const [adminNotes, setAdminNotes] = useState('');
   const { logout } = useAuth();
 
-  useEffect(() => {
-    fetchSuggestions();
-  }, [filter]);
-
-  const fetchSuggestions = async () => {
+  const fetchSuggestions = useCallback(async () => {
     try {
       setLoading(true);
       const params = filter !== 'all' ? { status: filter } : {};
       const response = await axios.get(`${API_URL}/suggestions/`, { params });
       setSuggestions(response.data.results || response.data);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to load suggestions:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [filter]);
+
+  useEffect(() => {
+    fetchSuggestions();
+  }, [fetchSuggestions]);
 
   const handleApprove = async (id: number) => {
     try {

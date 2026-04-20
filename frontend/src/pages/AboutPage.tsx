@@ -31,6 +31,9 @@ export default function AboutPage() {
           as Sor or Tárrega. This gives performers the freedom to discover and choose based on their 
           own tastes and needs, not what's trending or what an algorithm thinks they should hear.
         </p>
+        <p>
+          -Jesse Washburn, Developer of Solmu
+        </p>
       </div>
     </div>
   );

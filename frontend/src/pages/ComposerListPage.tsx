@@ -45,7 +45,8 @@ export default function ComposerListPage() {
   const instrumentations = useInstrumentations();
   const countries = useCountries();
   const debouncedSearch = useDebounce(searchQuery, 150);
-  
+  const debouncedYearRange = useDebounce(birthYearRange, 300);
+
   // Cache loaded works to prevent unnecessary API calls
   const [loadedWorksCache, setLoadedWorksCache] = useState<Record<number, ComposerWork[]>>({});
   
@@ -112,9 +113,9 @@ export default function ComposerListPage() {
       }
       
       // Add birth year filters if either end has been adjusted
-      if (birthYearRange[0] !== 1400 || birthYearRange[1] !== 2025) {
-        params.birth_year_min = birthYearRange[0];
-        params.birth_year_max = birthYearRange[1];
+      if (debouncedYearRange[0] !== 1400 || debouncedYearRange[1] !== 2025) {
+        params.birth_year_min = debouncedYearRange[0];
+        params.birth_year_max = debouncedYearRange[1];
       }
 
       const response = await api.get('/composers/', { params });
@@ -127,7 +128,7 @@ export default function ComposerListPage() {
       setLoading(false);
       setSortLoading(false);
     }
-  }, [currentPage, pageSize, debouncedSearch, selectedInstrumentation, selectedCountry, birthYearRange, backendOrderField, backendOrderDirection, sortColumn]);
+  }, [currentPage, pageSize, debouncedSearch, selectedInstrumentation, selectedCountry, debouncedYearRange, backendOrderField, backendOrderDirection, sortColumn]);
 
   useEffect(() => {
     fetchComposers();
@@ -165,7 +166,6 @@ export default function ComposerListPage() {
     <div className="list-page">
       <header className="page-header">
         <h1>Composers</h1>
-        <p>Browse 15,000+ guitar composers</p>
       </header>
 
       <SearchBar

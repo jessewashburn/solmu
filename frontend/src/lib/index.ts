@@ -67,6 +67,32 @@ export const workService = {
   },
 };
 
+interface Stats {
+  total_composers: number;
+  total_works: number;
+}
+
+// Client-side cache so multiple components don't re-fetch
+let statsCache: Stats | null = null;
+let statsFetching: Promise<Stats> | null = null;
+
+export const statsService = {
+  getSummary: async (): Promise<Stats> => {
+    if (statsCache) return statsCache;
+    if (statsFetching) return statsFetching;
+
+    statsFetching = api.get<Stats>('/stats/summary/').then((res) => {
+      statsCache = res.data;
+      statsFetching = null;
+      return res.data;
+    });
+    return statsFetching;
+  },
+};
+
+// Preload stats at module load time so they're ready before React mounts
+statsService.getSummary();
+
 export const searchService = {
   // Traditional backend search
   search: async (query: string, page = 1) => {

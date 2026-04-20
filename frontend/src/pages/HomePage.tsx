@@ -9,7 +9,6 @@ import './HomePage.css';
 export default function HomePage() {
   const [highlightedWork, setHighlightedWork] = useState<Work | null>(null);
   const [loading, setLoading] = useState(true);
-
   useEffect(() => {
     loadHighlightedWork();
   }, []);
@@ -143,7 +142,7 @@ export default function HomePage() {
       <section className="browse-section">
         <h2 className="section-title">Explore the Database</h2>
         <p className="section-description">
-          Our comprehensive database features over 15,000 composers and 74,000 works, spanning centuries of guitar music from around the world.
+          Our comprehensive database features tens of thousands of composers and works, spanning centuries of guitar music from around the world.
         </p>
         <div className="browse-cards">
           <Link to="/composers" className="browse-card">
