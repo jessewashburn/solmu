@@ -8,6 +8,8 @@ from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q, Count, Value
 from django.db.models.functions import Length, Replace, Lower
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
 from django.contrib.postgres.search import TrigramSimilarity
 from .models import (
     Country, InstrumentationCategory, DataSource,
@@ -877,7 +879,14 @@ class StatsViewSet(viewsets.ViewSet):
     
     @action(detail=False, methods=['get'])
     def summary(self, request):
-        """Get database summary statistics"""
+        """Get database summary statistics (cached for 1 hour)"""
+        from django.core.cache import cache
+
+        cache_key = 'stats_summary'
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return Response(cached)
+
         stats = {
             'total_composers': Composer.objects.count(),
             'total_works': Work.objects.filter(is_public=True).count(),
@@ -886,6 +895,7 @@ class StatsViewSet(viewsets.ViewSet):
             'works_by_instrumentation': self._works_by_instrumentation(),
             'living_composers': Composer.objects.filter(is_living=True).count(),
         }
+        cache.set(cache_key, stats, 3600)
         return Response(stats)
     
     def _composers_by_period(self):
@@ -929,8 +939,9 @@ class UserSuggestionViewSet(viewsets.ModelViewSet):
             return [permissions.AllowAny()]
         return [IsHardcodedAdmin()]
     
+    @method_decorator(csrf_exempt, name='dispatch')
     def create(self, request, *args, **kwargs):
-        """Override create to add debugging for validation errors."""
+        """Public suggestion creation — CSRF exempt since no auth required."""
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():
             print("Validation errors:", serializer.errors)
